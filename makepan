@@ -1,0 +1,29 @@
+panhead: pandurata.o accel.o calc_g.o cashkarp.o time_keeper.o vector_math.o tensor_math.o calc_scat_angles.o calc_tetrad.o nt_spectrum.o chandra.o get_harm3d_data.o lookup_data.o
+	gcc -O3 -o pandurata pandurata.o accel.o calc_g.o cashkarp.o time_keeper.o vector_math.o tensor_math.o calc_scat_angles.o calc_tetrad.o nt_spectrum.o chandra.o get_harm3d_data.o lookup_data.o -lm
+pandurata.o: pandurata.c panhead.h
+	gcc -O3 -c pandurata.c 
+accel.o: accel.c panhead.h
+	gcc -O3 -c accel.c 
+calc_g.o: calc_g.c panhead.h
+	gcc -O3 -c calc_g.c 
+calc_scat_angles.o: calc_scat_angles.c panhead.h
+	gcc -O3 -c calc_scat_angles.c 
+calc_tetrad.o: calc_tetrad.c panhead.h
+	gcc -O3 -c calc_tetrad.c 
+cashkarp.o: cashkarp.c panhead.h
+	gcc -O3 -c cashkarp.c 
+chandra.o: chandra.c panhead.h
+	gcc -O3 -c chandra.c 
+get_harm3d_data.o: get_harm3d_data.c panhead.h
+	gcc -O3 -c get_harm3d_data.c 
+lookup_data.o: lookup_data.c panhead.h
+	gcc -O3 -c lookup_data.c 
+nt_spectrum.o: nt_spectrum.c panhead.h
+	gcc -O3 -c nt_spectrum.c 
+tensor_math.o: tensor_math.c panhead.h
+	gcc -O3 -c tensor_math.c 
+time_keeper.o: time_keeper.c
+	gcc -O3 -c time_keeper.c 
+vector_math.o: vector_math.c panhead.h
+	gcc -O3 -c vector_math.c 
+
