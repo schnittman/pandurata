@@ -1,6 +1,6 @@
 This is the version of Pandurata that was used in Schnittman, Krolik, and Noble (2013) [ApJ 769, 156]
 Extensive documentation can be found here:
-https://www.overleaf.com/project/668fa050dbd57caed2c005ff
+https://www.overleaf.com/9433418586jxqnqykkjbzj#e7c97d
 
 It uses the IDL routine read_harm3d_data2 to process the output data from Harm3d found in /rawdata, re-writing it in a Pandurata-friendly form in /data
 
