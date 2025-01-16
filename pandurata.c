@@ -389,9 +389,6 @@ int main(int argc, char* argv[])
   //Rout = 5.1;
   Redge = Risco;
   if ((em_model == 1.5)||(em_model == 3.5)) Redge = Rin;
-  Tmin = Rshell-2.*Rout;
-  Tmax = Rshell+100.;
-  dTbin = (Tmax-Tmin)/(Nt+1.);
   irstart = 0;
   view_jph = 30;
   //dph = 2.*PI/(N);
@@ -435,6 +432,10 @@ int main(int argc, char* argv[])
     drr[ir]=rrb[ir+1]-rrb[ir];
     if (rr[ir] < Rhor) irstart++;
   }
+  Tmin = Rshell-2.*Rout;
+  Tmax = Rshell+200.;
+  dTbin = (Tmax-Tmin)/(Nt+1.);
+
   dph = (pp[Nph]-pp[0])/Nph;
   dth = (tt[Nth]-tt[0])/Nth;
   if (irstart == 0) irstart = 1;
@@ -452,8 +453,8 @@ int main(int argc, char* argv[])
   }
   irstop=irstop-1;
   printf("%ld %g\n", irstop, rr[irstop]);
-  irstart = 100;
-  irstop = 100;
+  //irstart = 100;
+  //irstop = 100;
   irstep = 1;
   iphstart = 0;
   iphstop = 0;//Nph;
@@ -2051,6 +2052,7 @@ int main(int argc, char* argv[])
 	      //printf("%g %g %d %d %12.5e\n", Nescape, Ncapt,it, ip, yn[1]);	  
 	    }
 	    if (yn[1] > Rshell) {
+	      //printf("%g %g %ld %ld %12.5e\n", Nescape, Ncapt,it, ip, yn[1]);	  
 	      //printf("%ld %ld %ld %ld\n", it,ip,iscat,dscat);
 	      //if ((ir == 10)&&(it == 126)&&(ip == 124)) printf("OK");
 	      wlo = (yn[1]-Rshell)/(yn[1]-y[1]);
@@ -2058,18 +2060,21 @@ int main(int argc, char* argv[])
 	      for (j=0;j<=7;j++) {
 		yn[j] = wlo*y[j]+whi*yn[j];
 	      }
-	      jth = (int)(fabs(cos(yn[2]))*(Nth_obs+1.));
+	      jth = (long)(fabs(cos(yn[2]))*(Nth_obs+1.));
 	      if (TWO_SIDED >= 1) {
-		jth = (int)((cos(yn[2])+1.)/2.*(Nth_obs+1.));
+		jth = (long)((cos(yn[2])+1.)/2.*(Nth_obs+1.));
 	      }
 	      if (jth > Nth_obs) jth = Nth_obs;
-		
+
 	      while (yn[3] < 0) yn[3]+=2.*PI;
-	      jph = (int)(fmod(yn[3],2.*PI)/(2.*PI)*(Nph_obs+1));
+	      jph = (long)(fmod(yn[3],2.*PI)/(2.*PI)*(Nph_obs+1));
 	      if (jph > Nph_obs) jph = Nph_obs;
-	      jt = (int)(fabs(yn[0]-Tmin)/(Tmax-Tmin)*Nt);
+	      jt = (long)(fabs(yn[0]-Tmin)/(Tmax-Tmin)*Nt);
 	      if (jt > Nt) jt=Nt;
+	      //printf("%g %g %g %d\n",yn[0],Tmin,Tmax,Nt);
+	      //printf("%ld %ld %ld %ld\n",jth,jph,jt,indexph(jth,jph,jt));
 	      Iobs[indexph(jth,jph,jt)]=0;
+
 	      if (imageprint == 1) {
 		e_x[0]=-sin(yn[3]);
 		e_x[1]=cos(yn[3]);
