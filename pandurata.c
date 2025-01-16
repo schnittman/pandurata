@@ -1,5 +1,6 @@
 #include "panhead.h"
 #include <unistd.h>
+#include "randomNR.c"
 
 #define erro 1e-8
 #define emin 1e-14
@@ -132,6 +133,7 @@ int main(int argc, char* argv[])
     acc,steps,raydex,moddex,Nbins,dscat,iscat,isort,bigprint,imageprint,
     spec_model,rr_model,c_frame,just_scattered,irstart,irstop,irstep,
     iphstart,iphstop,iphstep;
+  long seed = -9876543;
   int signum,in_clump,ir_old,ir_new,jph_old,jph_new,ibottom,isbottom,
     old_zone,new_zone,*indx,*diskbody_ik;
   double big,temp;
@@ -373,8 +375,8 @@ int main(int argc, char* argv[])
   t = 0.0;
   dt = 1.0;
   V_tot = 0;
-  srand(time(NULL));
-  //srand(RUN_ID);
+  //srand(time(NULL));
+  srand(RUN_ID);
   fov = 20;
   Rshell = 10000;
   Rin = Risco;
@@ -450,11 +452,11 @@ int main(int argc, char* argv[])
   }
   irstop=irstop-1;
   printf("%ld %g\n", irstop, rr[irstop]);
-  //irstart = 100;
-  //irstop = 100;
+  irstart = 100;
+  irstop = 100;
   irstep = 1;
   iphstart = 0;
-  iphstop = Nph;
+  iphstop = 0;//Nph;
   iphstep = 1;
 
   flux2 = 0;
@@ -462,12 +464,13 @@ int main(int argc, char* argv[])
   for (ibottom=0;ibottom<=TWO_SIDED;ibottom++) {
   for (ir=irstart;ir<=irstop;ir+=irstep) {
     for (iph=iphstart;iph<=iphstop;iph+=iphstep) {
-      srand(ibottom*(Nr+1)*(Nph+1)+ir*(Nph+1)+iph+RUN_ID*0);
+      //srand(ibottom*(Nr+1)*(Nph+1)+ir*(Nph+1)+iph+RUN_ID*0);
       y0[0]=0;
       y0[1]=rr[ir];
       if (ibottom == 0) y0[2]=emtop_ik[indexr(ir,iph)]-eps_th;
       if (ibottom == 1) y0[2]=embot_ik[indexr(ir,iph)]+eps_th;
       y0[3]=pp[iph];
+      //lambda = ran2(&seed);
       //lambda = (double)rand()/(RAND_MAX);
       //y0[3]=y0[3]+((int)(lambda*4.))*PI/2.;
       r = y0[1];
@@ -587,11 +590,13 @@ int main(int argc, char* argv[])
 
 	  //LAUNCH DISK PHOTON
 	  if ((ibottom == 0)||(ibottom == 1)) {
-	    lambda = (double)rand()/(RAND_MAX);
+	    //lambda = (double)rand()/(RAND_MAX);
+	    lambda = ran2(&seed);
 	    cth = lambda; //only consider photons moving in +z direction
 	    //if ((rr[ir]<Redge)&&(atm_model==1.5)) cth = 1.-2.*lambda;
 	    sth = sqrt(1.-cth*cth);
-	    lambda = (double)rand()/(RAND_MAX);	
+	    lambda = ran2(&seed);
+	    //lambda = (double)rand()/(RAND_MAX);	
 	    phi = 2.*PI*lambda;
 	    
 	    r = y0[1];
@@ -682,13 +687,16 @@ int main(int argc, char* argv[])
 	  }
 	  //LAUNCH CORONA PHOTON
 	  if ((ibottom == 2)||(ibottom == 3)) {
-	    lambda = (double)rand()/(RAND_MAX);
+	    lambda = ran2(&seed);
+	    //lambda = (double)rand()/(RAND_MAX);
 	    cth = 1.-2.*lambda; //photons emitted isotropically
 	    sth = sqrt(1.-cth*cth);
-	    lambda = (double)rand()/(RAND_MAX);	
+	    lambda = ran2(&seed);
+	    //lambda = (double)rand()/(RAND_MAX);	
 	    phi = 2.*PI*lambda;
 	    
-	    lambda = (double)rand()/(RAND_MAX);	
+	    lambda = ran2(&seed);
+	    //lambda = (double)rand()/(RAND_MAX);	
 	    //upper corona
 	    if (ibottom == 2) { 
 	      dcth = (emtop_ik[indexr(ir,iph)]-th0)/((double)(N+1)*(N+1));
@@ -732,7 +740,8 @@ int main(int argc, char* argv[])
 	    A_fact = A_fact*(dcth/dth);
 	    //factor for sparce sampling of coronal photons
 	    A_fact = A_fact/fcseed;
-	    lambda = (double)rand()/(RAND_MAX);
+	    lambda = ran2(&seed);
+	    //lambda = (double)rand()/(RAND_MAX);
 	    if (lambda < fcseed) A_fact = 0;
 	    deg = 0;
 	    
@@ -1308,10 +1317,12 @@ int main(int argc, char* argv[])
 		e_z_hat[2]=1;
 		
 		//PICK RANDOM SCATTERING ANGLE IN ELF-4 FRAME
-		lambda = (double)rand()/(RAND_MAX);
+		lambda = ran2(&seed);
+		//lambda = (double)rand()/(RAND_MAX);
 		cth = lambda;
 		sth = sqrt(1.-cth*cth);
-		lambda = (double)rand()/(RAND_MAX);
+		lambda = ran2(&seed);
+		//lambda = (double)rand()/(RAND_MAX);
 		f = lambda*2.*PI;
 		
 		for (j=0;j<=2;j++) {
@@ -1563,7 +1574,8 @@ int main(int argc, char* argv[])
 	      dtau_es = kapp_es*rho*dtau*R_g;
 	      tau_tot=tau_tot+dtau_es;
 	      l_tot = l_tot+dtau*R_g;
-	      lambda = (double)rand()/(RAND_MAX);
+	      lambda = ran2(&seed);
+	      //lambda = (double)rand()/(RAND_MAX);
 	      if (E0 > -0.99) printf("vcor %ld %ld %g %g %g %g %g\n",
 				     steps,iscat,dtau,rho,r,yn[2],dtau_es);
 
@@ -1784,7 +1796,8 @@ int main(int argc, char* argv[])
 		//printf("pre-scatter p0  %12.5g\n",ph_v_hat[0]);
 		E_i = ph_v_hat[0];
 		//PICK RANDOM 3-VELOCITY FOR ELECTRON IN CORONA FRAME
-		lambda = (double)rand()/(RAND_MAX);
+		lambda = ran2(&seed);
+		//lambda = (double)rand()/(RAND_MAX);
 		//ELECTRON TEMP IN MeV
 		T_e = T_e/(11000.)/1.0e6;
 		//BULK COMPTONIZATION
@@ -1793,9 +1806,11 @@ int main(int argc, char* argv[])
 		Z2 = Z1*Z1;
 		beta = sqrt(0.5*(-Z2+sqrt(Z2*Z2+4.*Z2)));
 
-		cth = 2.0*(double)rand()/(RAND_MAX)-1.0;
+		lambda = ran2(&seed);
+		cth = 2.0*lambda-1.0;
 		sth = sqrt(1.-cth*cth);
-		lambda = (double)rand()/(RAND_MAX);
+		lambda = ran2(&seed);
+		//lambda = (double)rand()/(RAND_MAX);
 		f = lambda*2.*PI;
 		n_hat[0] = sth*cos(f);
 		n_hat[1] = sth*sin(f);
@@ -1827,9 +1842,13 @@ int main(int argc, char* argv[])
 		e_z_hat[1] = ph_v_hat[2];
 		e_z_hat[2] = ph_v_hat[3];
 		normalize(e_z_hat);
-		r_hat[0] = (double)rand()/(RAND_MAX)-0.5;
-		r_hat[1] = (double)rand()/(RAND_MAX)-0.5;
-		r_hat[2] = (double)rand()/(RAND_MAX)-0.5;
+		lambda = ran2(&seed);
+		r_hat[0] = lambda-0.5;
+		lambda = ran2(&seed);
+		r_hat[1] = lambda-0.5;
+		lambda = ran2(&seed);
+		r_hat[2] = lambda-0.5;
+		//printf("%12.5e\n",lambda);
 		cross(e_z_hat,r_hat,e_x_hat);
 		normalize(e_x_hat);
 		cross(e_z_hat,e_x_hat,e_y_hat);
@@ -2032,7 +2051,7 @@ int main(int argc, char* argv[])
 	      //printf("%g %g %d %d %12.5e\n", Nescape, Ncapt,it, ip, yn[1]);	  
 	    }
 	    if (yn[1] > Rshell) {
-	      //printf("%d %d %d %d\n", it,ip,iscat,dscat);
+	      //printf("%ld %ld %ld %ld\n", it,ip,iscat,dscat);
 	      //if ((ir == 10)&&(it == 126)&&(ip == 124)) printf("OK");
 	      wlo = (yn[1]-Rshell)/(yn[1]-y[1]);
 	      whi = (Rshell-y[1])/(yn[1]-y[1]);
@@ -2132,7 +2151,7 @@ int main(int argc, char* argv[])
 	      //(distant) observer
 	      rdsh = (v_[0]*p_[0]+v_[1]*p_[1]+v_[2]*p_[2]+v_[3]*p_[3])/pdv_em;
 	      rdsh3 = rdsh*rdsh*rdsh;
-
+		
 	      degp = deg;
 	      for (iv=0;iv<=Ne;iv++) {
 		nu[iv] = nu[iv]*rdsh;
@@ -2235,7 +2254,6 @@ int main(int argc, char* argv[])
 		  //printf("%d %d %10.4e %10.4e %10.4e %10.4e\n",
 		  //   iv,elo,nu[iv],dnu0[elo],Bnu_[iv],Iobs[indexph(jth,jph,jt)]);
 		}
-	      
 		//sort by energy bins for image files
 		//linear scale
 		if (spec_model == 1) 
