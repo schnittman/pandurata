@@ -1,0 +1,770 @@
+PRO figures5d,ifig
+!P.font = 0
+!P.charsize = 1.5
+thk = 5
+if (fix(ifig) eq 1) then begin
+    N1 = 0
+    N2 = 0
+    N3 = 0
+    aa = 0.9
+    t_frame = 0.
+    openr,1,'data/gdata.dat'
+    readf,1,N1,N2,N3
+    r = fltarr(N1)
+    t = fltarr(N2)
+    t_ = fltarr(N2+1)
+    p = fltarr(N3)
+    readf,1,r,t,p
+    close,1
+    
+    dr = deriv(r)
+    dt = deriv(t)
+    dp = deriv(p)
+
+    rho = fltarr(N1,N2,N3)
+;    uu = fltarr(N1,N2,N3)
+;    u0 = fltarr(N1,N2,N3)
+;    u1 = fltarr(N1,N2,N3)
+;    u2 = fltarr(N1,N2,N3)
+;    u3 = fltarr(N1,N2,N3)
+    LL = fltarr(N1,N2,N3)
+    rr = fltarr(N1,N2,N3)
+    tt = fltarr(N1,N2,N3)
+    pp = fltarr(N1,N2,N3)
+    dV = fltarr(N1,N2,N3)
+    g_ = fltarr(N1,N2,4,4)
+
+    for ir=0,N1-1 do rr(ir,*,*)=r(ir)
+    for it=0,N2-1 do tt(*,it,*)=t(it)
+    for ip=0,N3-1 do pp(*,*,ip)=p(ip)
+
+    for ip=0,N3-1 do dV(*,*,ip)=(dr#dt)*rr(*,*,ip)^2.*sin(tt(*,*,ip))*dp(ip)
+    R_hor = 1.+sqrt(1.-aa*aa)
+;    Sigma = rr^2.+aa^2.*cos(tt)^2.
+;    Delta = rr^2.-2.*rr+aa^2.
+;    alpha = sqrt(Sigma*Delta/(Sigma*Delta+2.*rr*(aa^2.+rr^2.)))
+;    omega = 2.*rr*aa/(Sigma*Delta+2.*rr*(aa^2.+rr^2.))
+;    varph = sqrt((Sigma*Delta+2.*rr*(aa^2.+rr^2.))/Sigma*sin(tt)^2.)
+  
+    openr,1,'data/rh_data.dat'
+    readf,1,rho
+    close,1
+;    openr,1,'uu_data.dat'
+;    readf,1,uu
+;    close,1
+;    openr,1,'u0_data.dat'
+;    readf,1,u0
+;    close,1
+;    openr,1,'u1_data.dat'
+;    readf,1,u1
+;    close,1
+;    openr,1,'u2_data.dat'
+;    readf,1,u2
+;    close,1
+;    openr,1,'u3_data.dat'
+;    readf,1,u3
+;    close,1
+    openr,1,'data/ll_data.dat'
+    readf,1,ll
+    close,1
+    
+;interpolate onto uniform grid in theta
+
+    newdt = (t(N2-1)-t(0))/(N2-1)
+    newt = findgen(N2)*newdt+t(0)
+    rho_new = rho
+;    uu_new = uu
+;    u0_new = u0
+;    u1_new = u1
+;    u2_new = u2
+;    u3_new = u3
+    ll_new = ll
+    rho_new(*,0,*)=rho(*,0,*)
+;    uu_new(*,0,*)=uu(*,0,*)
+;    u0_new(*,0,*)=u0(*,0,*)
+;    u1_new(*,0,*)=u1(*,0,*)
+;    u2_new(*,0,*)=u2(*,0,*)
+;    u3_new(*,0,*)=u3(*,0,*)
+    ll_new(*,0,*)=ll(*,0,*)
+    rho_new(*,N2-1,*)=rho(*,N2-1,*)
+;    uu_new(*,N2-1,*)=uu(*,N2-1,*)
+;    u0_new(*,N2-1,*)=u0(*,N2-1,*)
+;    u1_new(*,N2-1,*)=u1(*,N2-1,*)
+;    u2_new(*,N2-1,*)=u2(*,N2-1,*)
+;    u3_new(*,N2-1,*)=u3(*,N2-1,*)
+    ll_new(*,N2-1,*)=ll(*,N2-1,*)
+    wlo_it = fltarr(N2)
+    whi_it = fltarr(N2)
+    for it=1,N2-2 do begin
+        hidex = where(t gt newt(it))
+        ihi = hidex(0)
+        ilo = ihi-1
+        wlo = (t(ihi)-newt(it))/(t(ihi)-t(ilo))
+        whi = (newt(it)-t(ilo))/(t(ihi)-t(ilo))
+        wlo_it(it)=wlo
+        whi_it(it)=whi
+        rho_new(*,it,*)=wlo*rho(*,ilo,*)+whi*rho(*,ihi,*)
+;        uu_new(*,it,*)=wlo*uu(*,ilo,*)+whi*uu(*,ihi,*)
+;        u0_new(*,it,*)=wlo*u0(*,ilo,*)+whi*u0(*,ihi,*)
+;        u1_new(*,it,*)=wlo*u1(*,ilo,*)+whi*u1(*,ihi,*)
+;        u2_new(*,it,*)=wlo*u2(*,ilo,*)+whi*u2(*,ihi,*)
+;        u3_new(*,it,*)=wlo*u3(*,ilo,*)+whi*u3(*,ihi,*)
+        ll_new(*,it,*)=wlo*ll(*,ilo,*)+whi*ll(*,ihi,*)
+    endfor
+
+    y = fltarr(N2)
+    newy = fltarr(N2)
+
+    rho = rho_new
+;    uu = uu_new
+;    u0 = u0_new
+;    u1 = u1_new
+;    u2 = u2_new
+;    u3 = u3_new
+    ll = ll_new
+
+    t(*) = newt(*)
+    dt = deriv(t)
+    t_(0:N2-1)=t-0.5*dt(0)
+    t_(N2)=t(N2-1)+0.5*dt(0)
+    for it=0,N2-1 do tt(*,it,*)=t(it)
+    Sigma = rr^2.+aa^2.*cos(tt)^2.
+    Delta = rr^2.-2.*rr+aa^2.
+    alpha = sqrt(Sigma*Delta/(Sigma*Delta+2.*rr*(aa^2.+rr^2.)))
+    omega = 2.*rr*aa/(Sigma*Delta+2.*rr*(aa^2.+rr^2.))
+    varph = sqrt((Sigma*Delta+2.*rr*(aa^2.+rr^2.))/Sigma*sin(tt)^2.)
+  
+    g_(*,*,0,0) = -alpha(*,*,0)^2.+omega(*,*,0)^2.*varph(*,*,0)^2.
+    g_(*,*,0,3) = -omega(*,*,0)*varph(*,*,0)^2.
+    g_(*,*,1,1) = Sigma(*,*,0)/Delta(*,*,0)
+    g_(*,*,2,2) = Sigma(*,*,0)
+    g_(*,*,3,3) = varph(*,*,0)^2.
+    g_(*,*,3,0) = g_(*,*,0,3)
+
+  ;fix u^t so that g_munu u^mu u^nu = -1
+;    za = g_(*,*,0,0)
+;    for ip = 0,N3-1 do begin
+;        zb = 2.*g_(*,*,0,3)*u3(*,*,ip)
+;        zc = g_(*,*,1,1)*u1(*,*,ip)^2.+g_(*,*,2,2)*u2(*,*,ip)^2.+$
+;          g_(*,*,3,3)*u3(*,*,ip)^2.+1.
+;        u0_new(*,*,ip)=(-zb-sqrt(zb*zb-4.*za*zc))/(2.*za)
+;    endfor
+  ;set u0 inside the horizon to the value just outside
+    ir_out = where(r gt R_hor)
+    ir_out = ir_out(0)
+;    for ir = 0,N1-1 do $
+;      if (r(ir) lt R_hor) then $
+;      u0_new(ir,*,*)=u0_new(ir_out,*,*)
+    
+;    u0 = u0_new
+;    ph0 = 12
+;    newnrm = g_(*,*,0,0)*u0(*,*,ph0)*u0(*,*,ph0)+ $
+;      2.*g_(*,*,0,3)*u0(*,*,ph0)*u3(*,*,ph0)+ $
+;      g_(*,*,1,1)*u1(*,*,ph0)*u1(*,*,ph0)+ $
+;      g_(*,*,2,2)*u2(*,*,ph0)*u2(*,*,ph0)+ $
+;      g_(*,*,3,3)*u3(*,*,ph0)*u3(*,*,ph0)
+;  E_0 = -(g_(*,*,0,0)*u0(*,*,0)+g_(*,*,0,3)*u3(*,*,0))
+
+  Mdotc = 0.0177;m_dot in code units, comes from history files (shell integrations) 
+  L_Ledd = 0.01
+  eta = 0.1 ;nominal accretion radiative efficiency
+  kappa = 0.4
+  G_N = 6.6726d-8
+  M_BH = 10.*(2.d33)
+  cc = 3d10
+  sigma_SB = 5.6705d-5
+  sigma_T = 6.6525d-25
+  mp = 1.6726d-24
+  me = 9.1094d-28
+  za = 7.5657d-15
+  kB = 1.3807d-16
+
+  t_cgs = G_N*M_BH/cc^3.
+  r_cgs = G_N*M_BH/cc^2.
+  rho_cgs = rho*(4.*!PI*cc^2.)/(kappa*G_N*M_BH*Mdotc)*(L_Ledd/eta)
+  ll_cgs = ll*(4.*!PI*cc^2.)/(kappa*G_N*M_BH*Mdotc)*(L_Ledd/eta)*cc^2/t_cgs
+  tau_es = fltarr(N1,N2+1,N3)
+  flux_cgs = fltarr(N1,N2+1,N3)
+  T_cor = ll_cgs*0
+  for it=1,N2 do begin
+      tau_es(*,it,*)=tau_es(*,it-1,*)+dt(it-1)*rr(*,it-1,*)*kappa*rho_cgs(*,it-1,*)*r_cgs
+      flux_cgs(*,it,*)=flux_cgs(*,it-1,*)+dt(it-1)*rr(*,it-1,*)*ll_cgs(*,it-1,*)*r_cgs
+  endfor
+  sigtau_es = fltarr(N1,N3)
+  netflux = fltarr(N1,N3)
+  diskflux = fltarr(N1,N3)
+  em_top = fltarr(N1,N3)
+  em_bot = fltarr(N1,N3)
+  ref_top = fltarr(N1,N3)
+  ref_bot = fltarr(N1,N3)
+  diskbody = fltarr(N1,N3)
+  diskbody_ijk = intarr(N1,N2,N3)
+  vertices_top = fltarr(3,N1,N3)
+  vertices_bot = fltarr(3,N1,N3)
+  ccx = fltarr(N1,N3)
+  ccy = fltarr(N1,N3)
+  ccx(*,*)=rr(*,0,*)*cos(pp(*,0,*))
+  ccy(*,*)=rr(*,0,*)*sin(pp(*,0,*))
+  sigtau_es(*,*)=tau_es(*,N2,*)
+  netflux(*,*) = flux_cgs(*,N2,*)
+  Tdisk = (0.5*netflux/sigma_SB)^0.25
+  Uph = 0.5*za*Tdisk^4.
+  Tdisk(*,*)=0.
+  n_e = rho_cgs/mp
+  corona_tau = 1.0
+  photo_tau = corona_tau+1.
+
+  endip = 1
+  if (ifig eq 1.4) then endip = N3-1
+  for ir=0,N1-1 do begin
+      for ip=0,endip do begin
+          subtau = tau_es(ir,*,ip)
+          if (sigtau_es(ir,ip) gt 2.*photo_tau) then begin
+              diskbody(ir,ip) = 2.
+              irtopdex = where(subtau gt photo_tau)
+              irtopdex = irtopdex(0)
+              ihit = irtopdex
+              ilot = ihit-1
+              wlot = (subtau(ihit)-photo_tau)/(subtau(ihit)-subtau(ilot))
+              whit = (photo_tau-subtau(ilot))/(subtau(ihit)-subtau(ilot))
+              ;ref_top(ir,ip)=t(irtopdex)
+              ref_top(ir,ip)=t_(ilot)*wlot+t_(ihit)*whit
+              subtau = tau_es(ir,N2,ip)-tau_es(ir,*,ip)
+              irbotdex = where(subtau gt photo_tau)
+              irbotdex = max(irbotdex)
+              ilob = irbotdex
+              ihib = ilob+1
+              wlob = (subtau(ihib)-photo_tau)/(subtau(ihib)-subtau(ilob))
+              whib = (photo_tau-subtau(ilob))/(subtau(ihib)-subtau(ilob))
+              ;if (irbotdex lt irtopdex) then irbotdex=irtopdex
+              ;ref_bot(ir,ip)=t(irbotdex)
+              ref_bot(ir,ip)=t_(ilob)*wlob+t_(ihib)*whib
+              if (ilot le ilob) then diskbody_ijk(ir,ilot:ilob,ip)=2.
+          endif else begin
+              ref_top(ir,ip)=!PI/2.
+              ref_bot(ir,ip)=!PI/2.
+          endelse
+      endfor
+  endfor
+
+  for ir=0,N1-1 do begin
+      for ip=0,endip do begin
+          subtau = tau_es(ir,*,ip)
+          neg_z = where(subtau gt 0.5*sigtau_es(ir,ip))
+          if (sigtau_es(ir,ip) gt 2.*corona_tau) then begin
+              if (sigtau_es(ir,ip) le 2.*photo_tau) then diskbody(ir,ip)=1.
+              irtopdex = where(subtau gt corona_tau)
+              irtopdex = irtopdex(0)
+              ihit = irtopdex
+              ilot = ihit-1
+              wlot = (subtau(ihit)-corona_tau)/(subtau(ihit)-subtau(ilot))
+              whit = (corona_tau-subtau(ilot))/(subtau(ihit)-subtau(ilot))
+              ;em_top(ir,ip)=t(irtopdex)
+              em_top(ir,ip)=t_(ilot)*wlot+t_(ihit)*whit
+              subtau = tau_es(ir,N2,ip)-tau_es(ir,*,ip)
+              irbotdex = where(subtau gt corona_tau)
+              irbotdex = max(irbotdex)
+              ilob = irbotdex
+              ihib = ilob+1
+              wlob = (subtau(ihib)-corona_tau)/(subtau(ihib)-subtau(ilob))
+              whib = (corona_tau-subtau(ilob))/(subtau(ihib)-subtau(ilob))
+              em_bot(ir,ip)=t_(ilob)*wlob+t_(ihib)*whib
+              diskflux(ir,ip)=(flux_cgs(ir,ilob,ip)*wlob+flux_cgs(ir,ihib,ip)*whib) - $
+                (flux_cgs(ir,ilot,ip)*wlot+flux_cgs(ir,ihit,ip)*whit)
+              if (diskflux(ir,ip) lt 0) then diskflux(ir,ip)=0.
+              Tdisk(ir,ip)=(0.5*diskflux(ir,ip)/sigma_SB)^0.25
+              ;print,ir,ip,ilot,ilob
+              if (ilot le ilob) then begin
+                  ;print,ir,ip
+                  ;diskbody_ijk(ir,ilot:ilob,ip)=1
+                  for it=ilot,ilob do $
+                    if (diskbody_ijk(ir,it,ip) ne 2) then $
+                    diskbody_ijk(ir,it,ip) = 1
+              endif
+          endif else begin
+              em_top(ir,ip)=!PI/2.
+              em_bot(ir,ip)=!PI/2.
+          endelse
+          vertices_top(*,ir,ip)=r(ir)*[sin(em_top(ir,ip))*cos(p(ip)), $
+                                       sin(em_top(ir,ip))*sin(p(ip)), $
+                                       cos(em_top(ir,ip))]
+          vertices_bot(*,ir,ip)=r(ir)*[sin(em_bot(ir,ip))*cos(p(ip)), $
+                                       sin(em_bot(ir,ip))*sin(p(ip)), $
+                                       cos(em_bot(ir,ip))]
+          subtau = tau_es(ir,*,ip)
+          neg_z = where(subtau gt 0.5*sigtau_es(ir,ip))
+          if (neg_z(0) ge 0) then subtau(neg_z)=sigtau_es(ir,ip)-subtau(neg_z)
+          tau_es(ir,*,ip)=subtau
+          subflx = flux_cgs(ir,*,ip)
+          neg_z = where(subflx gt 0.5*netflux(ir,ip))
+          if (neg_z(0) ge 0) then subflx(neg_z)=netflux(ir,ip)-subflx(neg_z)
+          flux_cgs(ir,*,ip)=subflx
+          if (Uph(ir,ip) gt 0) then begin
+              alpha = (ll_cgs(ir,*,ip)/(cc*sigma_T*n_e(ir,*,ip)*Uph(ir,ip)))
+              T_cor(ir,*,ip)=(1./alpha^2.+1./alpha)^(-0.5)*(me*cc^2/(4.*kB))
+          endif
+          if (Uph(ir,ip) eq 0) then T_cor(ir,*,ip)=0.
+          if (sigtau_es(ir,ip) gt 2.*corona_tau) then $
+            if (ilob ge ilot) then T_cor(ir,ilot:ilob,ip)=Tdisk(ir,ip)
+      endfor
+  endfor
+
+  incor = where((diskbody_ijk eq 0)and(rr gt R_hor))
+  inatm = where((diskbody_ijk eq 1)and(rr gt R_hor))
+  indisk = where((diskbody_ijk eq 2)and(rr gt R_hor))
+
+  if (ifig eq 1.1) then begin
+      contour,rho(*,*,0),r#sin(t),r#cos(t),xrange=[0,40],yrange=[-20,20],$
+        levels = 10.^(findgen(100)/99.*6.-6.),/isotropic,/fill
+      contour,tau_es(*,*,0),r#sin(t_),r#cos(t_),xrange=[0,40],yrange=[-20,20],$
+        levels = [0.01,0.1,1],/isotropic,/noerase,thick=4,c_labels=[1,1,1],$
+        xtitle = 'x/M', ytitle = 'z/M',title='gas density'
+  endif
+;stop
+  if (ifig eq 1.2) then begin
+      contour,ll(*,*,0),r#sin(t),r#cos(t),xrange=[0,40],yrange=[-20,20],$
+        levels = 10.^(findgen(100)/99.*10.-13.),/isotropic,/fill
+      contour,tau_es(*,*,0),r#sin(t_),r#cos(t_),xrange=[0,40],yrange=[-20,20],$
+        levels = [0.01,0.1,1],/isotropic,/noerase,thick=4,c_labels=[1,1,1],$
+        xtitle = 'x/M', ytitle = 'z/M',title='local heating'
+  endif
+;stop
+  if (ifig eq 1.3) then begin
+      contour,T_cor(*,*,0),r#sin(t),r#cos(t),xrange=[0,40],yrange=[-20,20],$
+        levels = 10.^(findgen(100)/99.*7.+4.),/isotropic,/fill
+      contour,tau_es(*,*,0),r#sin(t_),r#cos(t_),xrange=[0,40],yrange=[-20,20],$
+        levels = [0.01,0.1,1],/isotropic,/noerase,thick=4,c_labels=[1,1,1],$
+        xtitle = 'x/M', ytitle = 'z/M',title='gas temperature'
+  endif
+  if (ifig eq 1.31) then begin
+      
+    Npx = 12600
+    Nx = 100
+    Ny = 5
+    xx = findgen(Nx)
+    yy = findgen(Ny)
+    xscale = findgen(Nx)/(Nx-1.)*6.+4.
+    xscale = 10.^xscale
+    yscale = fltarr(Nx)+1
+    movscl = fltarr(Ny,Nx)
+    for i=0,Nx-1 do movscl(*,i)=xscale(i)
+;    data = byte(255*(alog10(movscl/max(movscl)+1e-5)+5.01)/5.)
+    enlarge = rebin(movscl,50,1000)
+;      tvscl,enlarge,0,1000,/Device
+    contour,enlarge,Position=[2600,6000,3100,12000],/Device,$
+      yticks=1,yminor=1,ytickname=[' ',' '],$
+      xticks=1,xminor=1,xtickname=[' ',' '],$
+      levels = 10.^(findgen(100)/99.*7.+4.),/fill,/Noerase
+    plot_oi,yscale,xscale,Position=[2600,6000,3100,12000],xticks=1,$
+      xtickname=[' ',' '],yticks=5,yminor=1,$
+      ytickname=['10!U-2!N','10!U-1!N','10!U0!N','10!U1!N',$
+                 '10!U2!N','10!U3!N'],$
+      ytitle='T (keV)',/Noerase,/Device
+
+  endif
+;stop
+  if (ifig eq 1.4) then begin
+      contour,Tdisk,r#cos(p),r#sin(p),xrange=[0,40],yrange=[0,40],$
+        levels = 10.^(findgen(100)/99.*2.+5.),/isotropic,/fill,$
+        c_labels=[1,1,1],xtitle = 'x/M', ytitle = 'y/M',$
+        title='surface temperature'
+  endif
+stop
+endif
+
+  if ((ifig ge 2)and(ifig le 5)) then begin
+      !P.Charsize=1
+      N = 201.
+      Nt = 41.
+      Ne_i = 11
+      run_id = 101
+      it = 2
+      Nspec = 101
+      run_sort = 0
+
+  if (Nt eq 11) then $
+    inc_lbl = ['i=87!Uo!N','i=82!Uo!N','i=77!Uo!N','i=71!Uo!N','i=66!Uo!N',$
+               'i=60!Uo!N','i=54!Uo!N','i=47!Uo!N','i=39!Uo!N','i=30!Uo!N',$
+               'i=17!Uo!N']
+  if (Nt eq 21) then $
+    inc_lbl = ['i=89!Uo!N','i=86!Uo!N','i=83!Uo!N','i=80!Uo!N','i=78!Uo!N',$
+               'i=75!Uo!N','i=72!Uo!N','i=69!Uo!N','i=66!Uo!N','i=63!Uo!N',$
+               'i=60!Uo!N','i=57!Uo!N','i=53!Uo!N','i=50!Uo!N','i=46!Uo!N',$
+               'i=42!Uo!N','i=38!Uo!N','i=33!Uo!N','i=28!Uo!N','i=22!Uo!N',$
+               'i=12!Uo!N']
+  if (Nt eq 31) then $
+    inc_lbl = ['i=89!Uo!N','i=87!Uo!N','i=85!Uo!N','i=84!Uo!N','i=82!Uo!N',$
+               'i=80!Uo!N','i=78!Uo!N','i=76!Uo!N','i=74!Uo!N','i=72!Uo!N',$
+               'i=70!Uo!N','i=68!Uo!N','i=66!Uo!N','i=64!Uo!N','i=62!Uo!N',$
+               'i=60!Uo!N','i=58!Uo!N','i=56!Uo!N','i=53!Uo!N','i=51!Uo!N',$
+               'i=49!Uo!N','i=46!Uo!N','i=43!Uo!N','i=41!Uo!N','i=38!Uo!N',$
+               'i=35!Uo!N','i=31!Uo!N','i=27!Uo!N','i=23!Uo!N','i=18!Uo!N',$
+               'i=10!Uo!N']
+  if (Nt eq 41) then $
+    inc_lbl = ['i=89!Uo!N','i=88!Uo!N','i=87!Uo!N','i=85!Uo!N','i=84!Uo!N',$
+               'i=82!Uo!N','i=81!Uo!N','i=79!Uo!N','i=78!Uo!N','i=77!Uo!N',$
+               'i=75!Uo!N','i=74!Uo!N','i=72!Uo!N','i=71!Uo!N','i=69!Uo!N',$
+               'i=68!Uo!N','i=66!Uo!N','i=65!Uo!N','i=63!Uo!N','i=62!Uo!N',$
+               'i=60!Uo!N','i=58!Uo!N','i=57!Uo!N','i=55!Uo!N','i=53!Uo!N',$
+               'i=52!Uo!N','i=50!Uo!N','i=48!Uo!N','i=46!Uo!N','i=44!Uo!N',$
+               'i=42!Uo!N','i=40!Uo!N','i=38!Uo!N','i=35!Uo!N','i=33!Uo!N',$
+               'i=30!Uo!N','i=27!Uo!N','i=24!Uo!N','i=20!Uo!N','i=16!Uo!N',$
+               'i=9!Uo!N']
+
+      if (fix(ifig) eq 2) then it = 0
+      if (fix(ifig) eq 3) then it = 5
+      if (fix(ifig) eq 4) then it = 10
+      if (fix(ifig) eq 5) then it = 20
+      if (fix(ifig) eq 2) then run_id = 100
+      if (fix(ifig) eq 3) then run_id = 100
+      if (fix(ifig) eq 4) then run_id = 102
+      if (fix(ifig) eq 5) then run_id = 103
+      run_id = 1250
+      rdata = dblarr(2,N,N)
+      Ixy = dblarr(N,N)
+      wght = dblarr(N,N)
+      mov = dblarr(N,N,Nt)
+      movx = dblarr(N,N,Nt)
+      movy = dblarr(N,N,Nt)
+      smov = dblarr(Ne_i,N,N,Nt)
+      smovx = dblarr(Ne_i,N,N,Nt)
+      smovy = dblarr(Ne_i,N,N,Nt)
+      mov2 = dblarr(Ne_i,N,N)
+      movx2 = dblarr(Ne_i,N,N)
+      movy2 = dblarr(Ne_i,N,N)
+      spec = dblarr(Nspec,Nt)
+      Qspec = dblarr(Nspec,Nt)
+      Uspec = dblarr(Nspec,Nt)
+      spec_s = dblarr(6,Nspec,Nt)
+      Qspec_s = dblarr(6,Nspec,Nt)
+      Uspec_s = dblarr(6,Nspec,Nt)
+      spec2 = dblarr(Nspec,Nt)
+      Qspec2 = dblarr(Nspec,Nt)
+      Uspec2 = dblarr(Nspec,Nt)
+      deg_spec = dblarr(Nspec,Nt)
+      ang_spec = dblarr(Nspec,Nt)
+
+      rdatafile = 'data/scat_spec.0000.dat'
+      dumpstr = string(run_id,format='(I4.4)')
+      strput,rdatafile,dumpstr,15
+      openr,1,rdatafile
+      readf,1,spec,Qspec,Uspec
+      for isort=0,5 do begin
+          readf,1,spec2,Qspec2,Uspec2
+          spec_s(isort,*,*)=spec2
+          Qspec_s(isort,*,*)=Qspec2
+          Uspec_s(isort,*,*)=Uspec2
+      endfor
+      close,1
+
+      rdatafile = 'data/scat_imag.0000.dat'
+      dumpstr = string(run_id,format='(I4.4)')
+      strput,rdatafile,dumpstr,15
+      openr,1,rdatafile
+      readf,1,mov;,smov
+      close,1
+      
+      rdatafile = 'data/scat_ipol.0000.dat'
+      dumpstr = string(run_id,format='(I4.4)')
+      strput,rdatafile,dumpstr,15
+      openr,1,rdatafile
+      readf,1,movx,movy;,smovx,smovy
+      close,1
+      
+;LOG ENERGY SPACING
+      emin = 0.1
+;  emin = 0.001 ;AGN scale
+      emax = 1000
+      shorte = emin*10.^(findgen(Nspec)/(Nspec-1.)*alog10(emax/emin))
+      bine = emin*10.^(findgen(Ne_i+1)/(Ne_i)*alog10(emax/emin))
+
+      for i=0,Nt-1 do begin
+          mov(*,*,i)=transpose(mov(*,*,i))
+          movx(*,*,i)=transpose(movx(*,*,i))
+          movy(*,*,i)=transpose(movy(*,*,i))
+      endfor
+      sortmov = mov(sort(mov))
+      movmax = max(mov)
+      movmax=sortmov(1.*N*N*Nt-100.)
+      movmax=sortmov(1.*N*N*Nt-1.)
+      outliers = where(mov gt movmax)
+      if (outliers(0) ge 0) then begin
+          movx(outliers)=movx(outliers)/mov(outliers)*movmax
+          movy(outliers)=movy(outliers)/mov(outliers)*movmax
+          mov(outliers)=movmax
+      endif
+
+      y_min = 0
+      je = run_sort 
+      if (N eq 81) then Ixy = dblarr(121,121)
+      if (N eq 201) then Ixy = dblarr(301,301)
+      ishift = N/2
+      Xpol = Ixy
+      Ypol = Ixy
+      Ixy(ishift/2:ishift/2+N-1,ishift:N+ishift-1) = mov(*,*,it)
+      Xpol(ishift/2:ishift/2+N-1,ishift:N+ishift-1) = movx(*,*,it)
+      Ypol(ishift/2:ishift/2+N-1,ishift:N+ishift-1) = movy(*,*,it)
+      Ixy = Ixy+1d-10
+      psi = atan(Ypol/Ixy,Xpol/Ixy)/2.
+      tot_ang = atan(total(Ypol),total(Xpol))/2.*!radeg
+      deg = sqrt((Ypol/Ixy)^2.+(Xpol/Ixy)^2.)
+      tot_deg = sqrt(total(Xpol)^2+total(Ypol)^2)/total(Ixy)
+      Xpol = deg*cos(psi)
+      Ypol = deg*sin(psi)
+      data = byte(255*(alog10(Ixy/movmax+1e-4)+4.01)/4.)
+;    data = byte(255*(Ixy/movmax))
+;      print,max(data),tot_deg,tot_deg2,tot_ang,tot_ang2
+      N15 = (N-1)*1.5+1
+      N2 = (fix(600./N15))*N15
+      enlarge = rebin(data,N2,N2)
+
+      erase
+      tvscl,enlarge,0,y_min,/Device
+      dd = 100.
+      pstep=10
+      maxIxy = max(Ixy)
+      for i=N15/6.,N15*(5./6.),pstep do begin
+          for j=N15/3.,N15,pstep do begin
+              x0 = i/(N15-1.)*12600.
+              y0 = j/(N15-1.)*12600.
+              dff = 100.*dd*([Xpol(i,j),Ypol(i,j),0])
+;              if (Ixy(i,j) gt 1d-4*maxIxy) then $
+;                plots,[x0-dff(0)/2.,x0+dff(0)/2.],[y0-dff(1)/2.,y0+dff(1)/2.],$
+;                color=0,/Device,thick=4
+          endfor
+      endfor
+      plots,[11000,11000+5.*dd],[12000,12000],color=255,thick=thk,/Device
+      xyouts,11000,11500,'deg=5%',color=255,/Device
+
+      Npx = 12600
+      Nx = 10
+      Ny = 5
+      xx = findgen(Nx)
+      yy = findgen(Ny)
+      xscale = findgen(Nx)/(Nx-1.)*5.-5.
+      xscale = 10.^xscale
+      yscale = fltarr(Nx)+1
+      movscl = fltarr(Ny,Nx)
+      for i=0,Nx-1 do movscl(*,i)=xscale(i)
+      data = byte(255*(alog10(movscl/max(movscl)+1e-5)+5.01)/5.)
+      enlarge = rebin(data,50,1000)
+;      tvscl,enlarge,0,1000,/Device
+      contour,enlarge,Position=[1600,6000,2000,12000],/Device,$
+        yticks=1,yminor=1,ytickname=[' ',' '],$
+        xticks=1,xminor=1,xtickname=[' ',' '],$
+        levels=indgen(255),c_color=indgen(255),/fill,/Noerase
+      plot_oi,yscale,xscale,Position=[1600,6000,2000,12000],xticks=1,$
+        xtickname=[' ',' '],yticks=5,yminor=1,$
+        ytickname=['10!U-5!N','10!U-4!N','10!U-3!N','10!U-2!N','10!U-1!N','1'],$
+        ytitle='I/I!Lmax!N',/Noerase,/Device,color=255
+      xyouts,11000,10500,inc_lbl(it),/Device,color=255
+  endif
+
+  if (fix(ifig) eq 7) then begin
+      !P.charsize=1.3
+      Nt = 21
+      Nspec = 101
+;sandwich corona, vary tau and T
+      run_ids = [102,101,100,103]
+      
+      idex75 = 4
+      idex60 = 10
+      idex45 = 15
+
+      spec = dblarr(Nspec,Nt)
+      Qspec = dblarr(Nspec,Nt)
+      Uspec = dblarr(Nspec,Nt)
+
+      emin = 0.1
+      emax = 1000
+      shorte = emin*10.^(findgen(Nspec)/(Nspec-1.)*alog10(emax/emin))
+      de = deriv(shorte)
+
+      for rundex=0,3 do begin
+          run_id = run_ids(rundex)
+          rdatafile = 'data/scat_spec.0000.dat'
+          dumpstr = string(run_id,format='(I4.4)')
+          strput,rdatafile,dumpstr,15
+          openr,1,rdatafile
+          readf,1,spec,Qspec,Uspec
+          close,1
+          deg_spec = sqrt(Qspec^2+Uspec^2)/spec
+          ang_spec = atan(Uspec,Qspec)/2.*!radeg
+
+          if (rundex eq 0) then min_deg = -110
+          if (rundex eq 1) then min_deg = -110
+          if (rundex eq 2) then min_deg = -110
+          if (rundex eq 3) then min_deg = -120
+          neg_ang = where(ang_spec lt min_deg)
+          if (neg_ang(0) ge 0) then ang_spec(neg_ang)=ang_spec(neg_ang)+180.
+          pos_ang = where(ang_spec gt min_deg+180)
+          if (pos_ang(0) ge 0) then ang_spec(pos_ang)=ang_spec(pos_ang)-180.
+          
+          if ((ifig eq 7.1)) then begin
+              if (rundex eq 0) then begin
+                  plot_oi,shorte,deg_spec(*,idex75)*100.,$
+                    xrange=[0.1,20],yrange=[0,12],xstyle=1,ystyle=1,$
+                    xtitle='E!Lobs!N (keV)',ytitle='polarization degree (%)',$
+                    thick=thk
+                  plots,[.15,.30],[1,1]*10,thick=thk,color= 60
+                  plots,[.15,.30],[1,1]*9,thick=thk,color= 90
+                  plots,[.15,.30],[1,1]*8,thick=thk,color= 120
+                  plots,[.15,.30],[1,1]*7,thick=thk,color= 150
+                  xyouts,0.32,9.9,'H/R = 0.05'
+                  xyouts,0.32,8.9,'H/R = 0.1'
+                  xyouts,0.32,7.9,'H/R = 0.2'
+                  xyouts,0.32,6.9,'H/R = 0.4'
+              endif
+              oplot,shorte,deg_spec(*,idex75)*100,thick=thk,color=60+rundex*30
+          endif
+          
+          if ((ifig eq 7.11)) then begin
+              if (rundex eq 0) then begin
+                  plot_oi,shorte,deg_spec(*,idex75)*100.,$
+                    xrange=[0.1,20],yrange=[0,12],xstyle=1,ystyle=1,$
+                    xtitle='E!Lobs!N (keV)',ytitle='polarization degree (%)',$
+                    thick=thk
+                  plots,[.15,.30],[1,1]*10,thick=thk,color= 60
+                  plots,[.15,.30],[1,1]*9,thick=thk,color= 90
+                  plots,[.15,.30],[1,1]*8,thick=thk,color= 120
+                  xyouts,0.32,9.9,'!9t!3!Les!N=1.4, T!Le!N=50 keV'
+                  xyouts,0.32,8.9,'!9t!3!Les!N=1.0, T!Le!N=100 keV'
+                  xyouts,0.32,7.9,'!9t!3!Les!N=0.5, T!Le!N=200 keV'
+              endif
+              oplot,shorte,deg_spec(*,idex75)*100,thick=thk,color=60+rundex*30
+          endif
+          
+          if (ifig eq 7.2) then begin
+;              if (rundex le 1) then min_deg = -50
+              neg_ang = where(ang_spec lt min_deg)
+              if (neg_ang(0) ge 0) then ang_spec(neg_ang)=ang_spec(neg_ang)+180.
+              pos_ang = where(ang_spec gt min_deg+180)
+              if (pos_ang(0) ge 0) then ang_spec(pos_ang)=ang_spec(pos_ang)-180.
+              if (rundex eq 0) then begin
+                  min_deg = -120
+                  plot_oi,shorte,smooth(ang_spec(*,idex75),1),$
+                    xrange=[0.1,20.],yrange=[min_deg,min_deg+180],xstyle=1,ystyle=1,$
+                    xtitle='E!Lobs!N (keV)',ytitle='polarization angle (deg)'
+                  plots,[0.12,0.2],[1,1]*(160)+min_deg,thick=thk,color=60
+                  plots,[0.12,0.2],[1,1]*(150)+min_deg,thick=thk,color=90
+                  plots,[0.12,0.2],[1,1]*(140)+min_deg,thick=thk,color=120
+                  plots,[0.12,0.2],[1,1]*(130)+min_deg,thick=thk,color=150
+                  xyouts,0.22,158+min_deg,'H/R=0.05'
+                  xyouts,0.22,148+min_deg,'H/R=0.1'
+                  xyouts,0.22,138+min_deg,'H/R=0.2'
+                  xyouts,0.22,128+min_deg,'H/R=0.4'
+              endif
+              oplot,shorte,smooth(ang_spec(*,idex75),1),thick=thk,color=60+rundex*30
+          endif
+          if (ifig eq 7.21) then begin
+;              if (rundex le 1) then min_deg = -50
+              neg_ang = where(ang_spec lt min_deg)
+              if (neg_ang(0) ge 0) then ang_spec(neg_ang)=ang_spec(neg_ang)+180.
+              pos_ang = where(ang_spec gt min_deg+180)
+              if (pos_ang(0) ge 0) then ang_spec(pos_ang)=ang_spec(pos_ang)-180.
+              if (rundex eq 0) then begin
+                  min_deg = -100
+                  plot_oi,shorte,smooth(ang_spec(*,idex75),1),$
+                    xrange=[0.1,20.],yrange=[min_deg,min_deg+200],xstyle=1,ystyle=1,$
+                    xtitle='E!Lobs!N (keV)',ytitle='polarization angle (deg)'
+                  plots,[0.12,0.2],[1,1]*(50)+min_deg,thick=thk,color=60
+                  plots,[0.12,0.2],[1,1]*(35)+min_deg,thick=thk,color=90
+                  plots,[0.12,0.2],[1,1]*(20)+min_deg,thick=thk,color=120
+                  xyouts,0.22,48+min_deg,'!9t!3!Les!N=1.4, T!Lcor!N=50 keV'
+                  xyouts,0.22,33+min_deg,'!9t!3!Les!N=1.0, T!Lcor!N=100 keV'
+                  xyouts,0.22,18+min_deg,'!9t!3!Les!N=0.5, T!Lcor!N=200 keV'
+              endif
+              oplot,shorte,smooth(ang_spec(*,idex75),1),thick=thk,color=60+rundex*30
+          endif
+      endfor
+      !P.charsize=1.5
+  endif
+  if ((fix(ifig) eq 8)) then begin
+      Nt = 21
+      Nspec = 201
+      
+      if (Nt eq 21) then begin
+          idex75 = 5
+          idex60 = 10
+          idex45 = 14
+          
+          inc_lbl = ['i=89!Uo!N','i=86!Uo!N','i=83!Uo!N','i=80!Uo!N','i=78!Uo!N',$
+                     'i=75!Uo!N','i=72!Uo!N','i=69!Uo!N','i=66!Uo!N','i=63!Uo!N',$
+                     'i=60!Uo!N','i=57!Uo!N','i=53!Uo!N','i=50!Uo!N','i=46!Uo!N',$
+                     'i=42!Uo!N','i=38!Uo!N','i=33!Uo!N','i=28!Uo!N','i=22!Uo!N',$
+                     'i=12!Uo!N']
+      endif
+
+      spec = dblarr(Nspec,Nt)
+      Qspec = dblarr(Nspec,Nt)
+      Uspec = dblarr(Nspec,Nt)
+
+      emin = 0.1
+      emax = 1000
+      shorte = emin*10.^(findgen(Nspec)/(Nspec-1.)*alog10(emax/emin))
+      de = deriv(shorte)
+
+      if (fix(ifig) eq 8) then run_ids = [143,144,145,146,147]
+;      if (fix(ifig) eq 8) then run_ids = [148,149,150,151,152]
+;      if (fix(ifig) eq 7) then run_ids = [113,114,115,116,117]
+;      if (fix(ifig) eq 8) then run_ids = [118,119,120,121,122]
+;      if (fix(ifig) eq 9) then run_ids = [143,148,189,189,189]
+
+      for rundex=0,4 do begin
+          run_id = run_ids(rundex)
+          rdatafile = '~/diskspec/scat_spec.0000.dat'
+          dumpstr = string(run_id,format='(I4.4)')
+          strput,rdatafile,dumpstr,21
+          openr,1,rdatafile
+          readf,1,spec,Qspec,Uspec
+          close,1
+          deg_spec = sqrt(Qspec^2+Uspec^2)/spec
+          ang_spec = atan(Uspec,Qspec)/2.*!radeg
+
+          if (fix(ifig) eq 8) then min_deg = -120
+          neg_ang = where(ang_spec lt min_deg)
+          if (neg_ang(0) ge 0) then ang_spec(neg_ang)=ang_spec(neg_ang)+180.
+          pos_ang = where(ang_spec gt min_deg+180)
+          if (pos_ang(0) ge 0) then ang_spec(pos_ang)=ang_spec(pos_ang)-180.
+          
+          if ((ifig eq 7.1)or(ifig eq 8.1)or(ifig eq 9.1)) then begin
+              if (rundex eq 0) then begin
+                  plot_oi,shorte,deg_spec(*,idex75)*100.,$
+                    xrange=[0.1,20.],yrange=[0,12],xstyle=1,ystyle=1,$
+                    xtitle='E!Lobs!N (keV)',ytitle='polarization degree (%)',thick=thk
+                  plots,[0.15,0.3],[1,1]*11,thick=thk,color= 60
+                  plots,[0.15,0.3],[1,1]*10,thick=thk,color= 90
+                  plots,[0.15,0.3],[1,1]*9,thick=thk,color= 120
+                  plots,[0.15,0.3],[1,1]*8,thick=thk,color= 150
+                  plots,[0.15,0.3],[1,1]*7,thick=thk,color= 180
+                  xyouts,0.32,10.9,'a/M=0'
+                  xyouts,0.32,9.9,'     0.5'
+                  xyouts,0.32,8.9,'     0.9'
+                  xyouts,0.32,7.9,'   0.99'
+                  xyouts,0.32,6.9,' 0.998'
+              endif
+              oplot,shorte,deg_spec(*,idex75)*100,thick=thk,color=60+rundex*30
+          endif
+          
+          if ((ifig eq 7.2)or(ifig eq 8.2)or(ifig eq 9.2)) then begin
+              if (rundex eq 0) then begin
+                  plot_oi,shorte,smooth(ang_spec(*,idex75),1),$
+                    xrange=[0.1,20.],yrange=[min_deg,min_deg+180],xstyle=1,ystyle=1,$
+                    xtitle='E!Lobs!N (keV)',ytitle='polarization angle (deg)'
+                  plots,[0.15,0.3],[1,1]*70+min_deg,thick=thk,color=60
+                  plots,[0.15,0.3],[1,1]*60+min_deg,thick=thk,color=90
+                  plots,[0.15,0.3],[1,1]*50+min_deg,thick=thk,color=120
+                  plots,[0.15,0.3],[1,1]*40+min_deg,thick=thk,color=150
+                  plots,[0.15,0.3],[1,1]*30+min_deg,thick=thk,color=180
+                  xyouts,0.32,68+min_deg,'a/M=0'
+                  xyouts,0.32,58+min_deg,'     0.5'
+                  xyouts,0.32,48+min_deg,'     0.9'
+                  xyouts,0.32,38+min_deg,'   0.99'
+                  xyouts,0.32,28+min_deg,' 0.998'
+              endif
+              oplot,shorte,smooth(ang_spec(*,idex75),1),thick=thk,color=60+rundex*30
+          endif
+      endfor
+  endif
+
+END
