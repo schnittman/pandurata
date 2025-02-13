@@ -457,11 +457,12 @@ int main(int argc, char* argv[])
   //irstop = 100;
   irstep = 1;
   iphstart = 0;
-  iphstop = 0;//Nph;
+  iphstop = (Nph+1)/N_symm-1;
+  iphstop = 2;
   iphstep = 1;
 
   flux2 = 0;
-  //for (ibottom=0;ibottom<=1;ibottom++) {
+  //for (ibottom=0;ibottom<=0;ibottom++) {
   for (ibottom=0;ibottom<=TWO_SIDED;ibottom++) {
   for (ir=irstart;ir<=irstop;ir+=irstep) {
     for (iph=iphstart;iph<=iphstop;iph+=iphstep) {
@@ -617,8 +618,8 @@ int main(int argc, char* argv[])
 	    //A_fact = dph*drr[ir];
 	    //These factors should now be included in G_fact
 	    //Factor of 8 goes from PI/2 half-plane to full 2PI disk, both sides
-	    if (TWO_SIDED == 0) A_fact = 8.0;
-	    if (TWO_SIDED > 0) A_fact = 4.0;
+	    if (TWO_SIDED == 0) A_fact = 2.*N_symm;
+	    if (TWO_SIDED > 0) A_fact = 1.*N_symm;
 	    //cgs area conversion
 	    A_fact = A_fact*R_g*R_g;
 	    //cos theta factor for optically thick planar emitter
@@ -1034,7 +1035,7 @@ int main(int argc, char* argv[])
 	      if (ir_old > Nr) ir_old = Nr;
 	      f_old = yn[3];
 	      while (f_old < 0) f_old+=2.*PI;
-	      f_old = fmod(f_old,(PI/2.));
+	      f_old = fmod(f_old,(2.*PI/N_symm));
 	      jph_old =(int)(f_old/dph);
 	      if (jph_old > Nph) jph_old = 0;
 	      old_zone = 0;
@@ -1049,7 +1050,7 @@ int main(int argc, char* argv[])
 	      if (ir_new > Nr) ir_new = Nr;
 	      f_new = y2[3];
 	      while (f_new < 0) f_new+=2.*PI;
-	      f_new = fmod(f_new,(PI/2.));
+	      f_new = fmod(f_new,(2.*PI/N_symm));
 	      jph_new =(int)(f_new/dph);
 	      if (jph_new > Nph) jph_new = 0;
 	      new_zone = 0;
@@ -1575,8 +1576,6 @@ int main(int argc, char* argv[])
 	      dtau_es = kapp_es*rho*dtau*R_g;
 	      tau_tot=tau_tot+dtau_es;
 	      l_tot = l_tot+dtau*R_g;
-	      lambda = ran2(&seed);
-	      //lambda = (double)rand()/(RAND_MAX);
 	      if (E0 > -0.99) printf("vcor %ld %ld %g %g %g %g %g\n",
 				     steps,iscat,dtau,rho,r,yn[2],dtau_es);
 
@@ -1715,6 +1714,8 @@ int main(int argc, char* argv[])
 	      //printf("%g %g %g\n",rdsh,pdv_em,dot_g4(g_up_ph,p_,p_));
 	      //}
 	      //printf("%d %d %g\n",it, steps, lambda);
+	      lambda = ran2(&seed);
+	      //lambda = (double)rand()/(RAND_MAX);
 	      if (lambda < (1.-exp(-dtau_es))) {
 		//printf("%10.4e %10.4e %10.4e %10.4e\n",r,yn[2],yn[3],dtau);
 		//printf("%d %g %g %g %g\n",steps,rho,dtau_es,T_e,R_g);
@@ -2283,7 +2284,7 @@ int main(int argc, char* argv[])
 		  if ((imageprint == 1)&&(isort >= 0)) {
 		    je = isort;
 		    if ((ix >= 0)&&(ix <= Ni)&&(iy >= 0)&&(iy <= Ni)
-			&&(fmod((int)jph,Nph_obs/4) == fmod(view_jph,Nph_obs/4))) {
+			&&(fmod((int)jph,(Nph_obs+1)/N_symm) == fmod(view_jph,(Nph_obs+1)/N_symm))) {
 		      //if (iv == 100) printf("%g %g %g %d %d %d\n",A_fact,Bnu_[iv],dnui0[elo],jph,ix,iy);
 		      //if (cos(yn[2]) >= 0) {
 		      if ((cos(yn[2]) >= 0)||(TWO_SIDED >= 1)) {
@@ -2330,9 +2331,9 @@ int main(int argc, char* argv[])
 	      //if ((imageprint == 1)&&(dscat == 0)&&(iscat > 0)) {
 	      //NORMAL CASE:
 	      //printf("%g %d %d %d\n",cos(y2[2]),jph,ix,iy);
-	      if ((imageprint == 1)&&(isort >= 0)) {
+	      if ((imageprint == 1)&&(isort <= 1)) {
 		if ((ix >= 0)&&(ix <= Ni)&&(iy >= 0)&&(iy <= Ni)&&(iscat >=0)
-		    &&(fmod((int)jph,(Nph_obs+1)/4) == fmod(view_jph,(Nph_obs+1)/4))) {
+		    &&(fmod((int)jph,(Nph_obs+1)/N_symm) == fmod(view_jph,(Nph_obs+1)/N_symm))) {
 		  //image contains energy-integrated flux, so we should
 		  //not include a factor of 1/dnu
 		  //printf("%g %d %d %d %d\n",cos(y2[2]),jth,jph,ix,iy);
@@ -2360,8 +2361,8 @@ int main(int argc, char* argv[])
 		}
 		if ((ix >= 0)&&(ix <= Ni)&&(iy >= 0)&&(iy <= Ni)
 		    &&((cos(y2[2])>0)||(TWO_SIDED >= 1))&&(iscat >=0)) {
-		  for (jquad=0;jquad<=3;jquad++) {
-		    jphq = fmod((int)(jph+(Nph_obs+1)/4*jquad),Nph_obs+1);
+		  for (jquad=0;jquad<N_symm;jquad++) {
+		    jphq = fmod((int)(jph+(Nph_obs+1)/N_symm*jquad),Nph_obs+1);
 		    phimage[indexphi(jth,jphq,Ni-ix,Ni-iy)] += 
 		      Iobs[indexph(jth,jph,jt)];
 		    phimagex[indexphi(jth,jphq,Ni-ix,Ni-iy)] +=
@@ -2386,8 +2387,8 @@ int main(int argc, char* argv[])
       if ((myid == 0)&&(iph == 0)&&(fmod(ir,5)==0)&&(ibottom>=0)) 
 	printf("%d %d %g %g %g %g %g %g\n",
 	       (int)RUN_ID,ibottom,rr[ir],Nescape,Ndisk,Nscat,
-	       emtop_elf_ik[indexelf(ir,iph,3,1)],tau_tt/((N+1)*(N+1)));
-      /*
+	       Tdisk_ik[indexr(ir,iph)],tau_tt/((N+1)*(N+1)));
+/*
       if ((myid == 0)&&(iph == 0)&&(fmod(ir,10)==0)&&(ibottom==1)) 
 	printf("%d %d %g %g %g %g %g %g\n",
 	       (int)RUN_ID,iph,rr[ir],Nescape,Ndisk,

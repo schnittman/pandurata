@@ -8,7 +8,7 @@ if (fix(ifig) eq 1) then begin
     N3 = 0
     aa = 0.9
     t_frame = 0.
-    openr,1,'data/gdata.dat'
+    openr,1,'data/gr_0000.dat'
     readf,1,N1,N2,N3
     r = fltarr(N1)
     t = fltarr(N2)
@@ -372,7 +372,7 @@ if (fix(ifig) eq 1) then begin
 stop
 endif
 
-  if ((ifig ge 2)and(ifig le 5)) then begin
+if ((ifig ge 2)and(ifig le 5)) then begin
       !P.Charsize=1
       N = 201.
       Nt = 41.
@@ -411,16 +411,15 @@ endif
                'i=30!Uo!N','i=27!Uo!N','i=24!Uo!N','i=20!Uo!N','i=16!Uo!N',$
                'i=9!Uo!N']
 
-      if (fix(ifig) eq 2) then it = 0
-      if (fix(ifig) eq 3) then it = 5
-      if (fix(ifig) eq 4) then it = 10
+      if (fix(ifig) eq 2) then it = 40
+      if (fix(ifig) eq 3) then it = 35
+      if (fix(ifig) eq 4) then it = 30
       if (fix(ifig) eq 5) then it = 20
       if (fix(ifig) eq 2) then run_id = 100
       if (fix(ifig) eq 3) then run_id = 100
       if (fix(ifig) eq 4) then run_id = 102
       if (fix(ifig) eq 5) then run_id = 103
       run_id = 1250
-      rdata = dblarr(2,N,N)
       Ixy = dblarr(N,N)
       wght = dblarr(N,N)
       mov = dblarr(N,N,Nt)
@@ -558,15 +557,469 @@ endif
         ytickname=['10!U-5!N','10!U-4!N','10!U-3!N','10!U-2!N','10!U-1!N','1'],$
         ytitle='I/I!Lmax!N',/Noerase,/Device,color=255
       xyouts,11000,10500,inc_lbl(it),/Device,color=255
-  endif
+   endif
+
+
+if (fix(ifig) eq 6) then begin
+   !P.Charsize=1
+   N = 201.
+   Nth = 41.
+   Nph = 40.
+   Ne_i = 11
+   run_id = 101
+   it = 2
+   Nspec = 101
+   run_sort = 0
+   
+   if ((Nth eq 41)and(ifig eq 6.1)) then $
+      inc_lbl = ['i=168!Uo!N',$
+                 'i=158!Uo!N','i=152!Uo!N','i=147!Uo!N','i=142!Uo!N','i=138!Uo!N',$
+                 'i=134!Uo!N','i=130!Uo!N','i=127!Uo!N','i=123!Uo!N','i=120!Uo!N',$
+                 'i=117!Uo!N','i=114!Uo!N','i=111!Uo!N','i=108!Uo!N','i=105!Uo!N',$
+                 'i=102!Uo!N','i=100!Uo!N','i=97!Uo!N','i=94!Uo!N','i=90!Uo!N',$
+                 'i=86!Uo!N','i=83!Uo!N','i=80!Uo!N','i=78!Uo!N',$
+                 'i=75!Uo!N','i=72!Uo!N','i=69!Uo!N','i=66!Uo!N','i=63!Uo!N',$
+                 'i=60!Uo!N','i=57!Uo!N','i=53!Uo!N','i=50!Uo!N','i=46!Uo!N',$
+                 'i=42!Uo!N','i=38!Uo!N','i=33!Uo!N','i=28!Uo!N','i=22!Uo!N',$
+                 'i=12!Uo!N']
+   if ((Nph eq 40)and(ifig eq 6.2)) then $
+      inc_lbl = ['i=0!Uo!N','i=9!Uo!N','i=18!Uo!N','i=27!Uo!N','i=36!Uo!N',$
+                 'i=45!Uo!N','i=54!Uo!N','i=63!Uo!N','i=72!Uo!N','i=81!Uo!N',$
+                 'i=90!Uo!N','i=99!Uo!N','i=108!Uo!N','i=117!Uo!N','i=126!Uo!N',$
+                 'i=135!Uo!N','i=144!Uo!N','i=153!Uo!N','i=162!Uo!N','i=171!Uo!N',$
+                 'i=180!Uo!N','i=189!Uo!N','i=198!Uo!N','i=207!Uo!N',$
+                 'i=216!Uo!N','i=225!Uo!N','i=234!Uo!N','i=243!Uo!N','i=252!Uo!N',$
+                 'i=261!Uo!N','i=270!Uo!N','i=279!Uo!N','i=288!Uo!N','i=297!Uo!N',$
+                 'i=306!Uo!N','i=315!Uo!N','i=324!Uo!N','i=333!Uo!N','i=342!Uo!N',$
+                 'i=351!Uo!N']
+   run_id = 1251
+   Ixy = dblarr(N,N)
+   tpmov = dblarr(N,N,Nph,Nth)
+   tpmovx = dblarr(N,N,Nph,Nth)
+   tpmovy = dblarr(N,N,Nph,Nth)
+      
+   rdatafile = 'data/scat_ithp.0000.dat'
+   dumpstr = string(run_id,format='(I4.4)')
+   strput,rdatafile,dumpstr,15
+   openr,1,rdatafile
+   readf,1,tpmov,tpmovx,tpmovy
+   close,1
+      
+   for i=0,Nth-1 do begin
+      for j=0,Nph-1 do begin
+         tpmov(*,*,j,i)=transpose(tpmov(*,*,j,i))
+         tpmovx(*,*,j,i)=transpose(tpmovx(*,*,j,i))
+         tpmovy(*,*,j,i)=transpose(tpmovy(*,*,j,i))
+      endfor
+   endfor
+
+   if (ifig eq 6.1) then begin
+      jph = 30
+      mov = fltarr(N,N,Nth)
+      movx = fltarr(N,N,Nth)
+      movy = fltarr(N,N,Nth)
+      mov(*,*,*)=tpmov(*,*,jph,*)
+      movx(*,*,*)=tpmovx(*,*,jph,*)
+      movy(*,*,*)=tpmovy(*,*,jph,*)
+      sortmov = mov(sort(mov))
+      movmax = max(mov)
+      movmax=sortmov(1.*N*N*Nth-100.)
+;      movmax=sortmov(1.*N*N*Nth-1.)
+      Nend = Nth
+   endif
+   if (ifig eq 6.2) then begin
+      jth = 36
+      mov = fltarr(N,N,Nph)
+      movx = fltarr(N,N,Nph)
+      movy = fltarr(N,N,Nph)
+      mov(*,*,*)=tpmov(*,*,*,jth)
+      movx(*,*,*)=tpmovx(*,*,*,jth)
+      movy(*,*,*)=tpmovy(*,*,*,jth)
+      sortmov = mov(sort(mov))
+      movmax = max(mov)
+      movmax=sortmov(1.*N*N*Nph-100.)
+;      movmax=sortmov(1.*N*N*Nth-1.)
+      Nend = Nph
+   endif
+   outliers = where(mov gt movmax)
+   if (outliers(0) ge 0) then begin
+      movx(outliers)=movx(outliers)/mov(outliers)*movmax
+      movy(outliers)=movy(outliers)/mov(outliers)*movmax
+      mov(outliers)=movmax
+   endif
+   
+   for it=Nend-1,0,-1 do begin
+      y_min = 0
+      if (N eq 81) then Ixy = dblarr(121,121)
+      if (N eq 201) then Ixy = dblarr(301,301)
+      ishift = N/2
+      Xpol = Ixy
+      Ypol = Ixy
+      Ixy(ishift/2:ishift/2+N-1,ishift:N+ishift-1) = mov(*,*,it)
+      Xpol(ishift/2:ishift/2+N-1,ishift:N+ishift-1) = movx(*,*,it)
+      Ypol(ishift/2:ishift/2+N-1,ishift:N+ishift-1) = movy(*,*,it)
+      Ixy = Ixy+1d-10
+      psi = atan(Ypol/Ixy,Xpol/Ixy)/2.
+      tot_ang = atan(total(Ypol),total(Xpol))/2.*!radeg
+      deg = sqrt((Ypol/Ixy)^2.+(Xpol/Ixy)^2.)
+      tot_deg = sqrt(total(Xpol)^2+total(Ypol)^2)/total(Ixy)
+      Xpol = deg*cos(psi)
+      Ypol = deg*sin(psi)
+      data = byte(255*(alog10(Ixy/movmax+1e-4)+4.01)/4.)
+      N15 = (N-1)*1.5+1
+      N2 = (fix(600./N15))*N15
+      enlarge = rebin(data,N2,N2)
+   
+      erase
+      tvscl,enlarge,0,y_min,/Device
+      dd = 100.
+      pstep=10
+      maxIxy = max(Ixy)
+      for i=N15/6.,N15*(5./6.),pstep do begin
+         for j=N15/3.,N15,pstep do begin
+            x0 = i/(N15-1.)*12600.
+            y0 = j/(N15-1.)*12600.
+            dff = 100.*dd*([Xpol(i,j),Ypol(i,j),0])
+;            if (Ixy(i,j) gt 1d-4*maxIxy) then $
+;               plots,[x0-dff(0)/2.,x0+dff(0)/2.],[y0-dff(1)/2.,y0+dff(1)/2.],$
+;                     color=255,/Device,thick=4
+         endfor
+      endfor
+      plots,[11000,11000+5.*dd],[12000,12000],color=255,thick=thk,/Device
+      xyouts,11000,11500,'deg=5%',color=255,/Device
+
+      Npx = 12600
+      Nx = 10
+      Ny = 5
+      xx = findgen(Nx)
+      yy = findgen(Ny)
+      xscale = findgen(Nx)/(Nx-1.)*5.-5.
+      xscale = 10.^xscale
+      yscale = fltarr(Nx)+1
+      movscl = fltarr(Ny,Nx)
+      for i=0,Nx-1 do movscl(*,i)=xscale(i)
+      data = byte(255*(alog10(movscl/max(movscl)+1e-5)+5.01)/5.)
+      enlarge = rebin(data,50,1000)
+;      tvscl,enlarge,0,1000,/Device
+      contour,enlarge,Position=[1600,6000,2000,12000],/Device,$
+              yticks=1,yminor=1,ytickname=[' ',' '],$
+              xticks=1,xminor=1,xtickname=[' ',' '],$
+              levels=indgen(255),c_color=indgen(255),/fill,/Noerase
+      plot_oi,yscale,xscale,Position=[1600,6000,2000,12000],xticks=1,$
+              xtickname=[' ',' '],yticks=5,yminor=1,$
+              ytickname=['10!U-5!N','10!U-4!N','10!U-3!N','10!U-2!N','10!U-1!N','1'],$
+              ytitle='I/I!Lmax!N',/Noerase,/Device,color=255
+      xyouts,11000,10500,inc_lbl(it),/Device,color=255
+   endfor
+endif
+
+;SORT IMAGES BY SPECTRAL BINS
+if (fix(ifig) eq 9) then begin
+   !P.Charsize=1
+   N = 201.
+   Nth = 41.
+   Nph = 40.
+   Ne_i = 11
+   run_id = 101
+   it = 2
+   Nspec = 101
+   run_sort = 0
+   
+   if (Nth eq 41) then $
+      inc_lbl = ['i=168!Uo!N',$
+                 'i=158!Uo!N','i=152!Uo!N','i=147!Uo!N','i=142!Uo!N','i=138!Uo!N',$
+                 'i=134!Uo!N','i=130!Uo!N','i=127!Uo!N','i=123!Uo!N','i=120!Uo!N',$
+                 'i=117!Uo!N','i=114!Uo!N','i=111!Uo!N','i=108!Uo!N','i=105!Uo!N',$
+                 'i=102!Uo!N','i=100!Uo!N','i=97!Uo!N','i=94!Uo!N','i=90!Uo!N',$
+                 'i=86!Uo!N','i=83!Uo!N','i=80!Uo!N','i=78!Uo!N',$
+                 'i=75!Uo!N','i=72!Uo!N','i=69!Uo!N','i=66!Uo!N','i=63!Uo!N',$
+                 'i=60!Uo!N','i=57!Uo!N','i=53!Uo!N','i=50!Uo!N','i=46!Uo!N',$
+                 'i=42!Uo!N','i=38!Uo!N','i=33!Uo!N','i=28!Uo!N','i=22!Uo!N',$
+                 'i=12!Uo!N']
+   run_id = 1251
+   Ixy = dblarr(N,N)
+   tpmov = dblarr(N,N,Nph,Nth)
+   tpmovx = dblarr(N,N,Nph,Nth)
+   tpmovy = dblarr(N,N,Nph,Nth)
+      
+   rdatafile = 'data/scat_ithp.0000.dat'
+   dumpstr = string(run_id,format='(I4.4)')
+   strput,rdatafile,dumpstr,15
+   openr,1,rdatafile
+   readf,1,tpmov,tpmovx,tpmovy
+   close,1
+      
+   for i=0,Nth-1 do begin
+      for j=0,Nph-1 do begin
+         tpmov(*,*,j,i)=transpose(tpmov(*,*,j,i))
+         tpmovx(*,*,j,i)=transpose(tpmovx(*,*,j,i))
+         tpmovy(*,*,j,i)=transpose(tpmovy(*,*,j,i))
+      endfor
+   endfor
+
+   if (ifig eq 6.1) then begin
+      jph = 30
+      mov = fltarr(N,N,Nth)
+      movx = fltarr(N,N,Nth)
+      movy = fltarr(N,N,Nth)
+      mov(*,*,*)=tpmov(*,*,jph,*)
+      movx(*,*,*)=tpmovx(*,*,jph,*)
+      movy(*,*,*)=tpmovy(*,*,jph,*)
+      sortmov = mov(sort(mov))
+      movmax = max(mov)
+      movmax=sortmov(1.*N*N*Nth-100.)
+;      movmax=sortmov(1.*N*N*Nth-1.)
+      Nend = Nth
+   endif
+   if (ifig eq 6.2) then begin
+      jth = 40
+      mov = fltarr(N,N,Nph)
+      movx = fltarr(N,N,Nph)
+      movy = fltarr(N,N,Nph)
+      mov(*,*,*)=tpmov(*,*,*,jth)
+      movx(*,*,*)=tpmovx(*,*,*,jth)
+      movy(*,*,*)=tpmovy(*,*,*,jth)
+      sortmov = mov(sort(mov))
+      movmax = max(mov)
+      movmax=sortmov(1.*N*N*Nph-100.)
+;      movmax=sortmov(1.*N*N*Nth-1.)
+      Nend = Nph
+   endif
+   outliers = where(mov gt movmax)
+   if (outliers(0) ge 0) then begin
+      movx(outliers)=movx(outliers)/mov(outliers)*movmax
+      movy(outliers)=movy(outliers)/mov(outliers)*movmax
+      mov(outliers)=movmax
+   endif
+   
+   for it=Nend-1,0,-1 do begin
+      y_min = 0
+      if (N eq 81) then Ixy = dblarr(121,121)
+      if (N eq 201) then Ixy = dblarr(301,301)
+      ishift = N/2
+      Xpol = Ixy
+      Ypol = Ixy
+      Ixy(ishift/2:ishift/2+N-1,ishift:N+ishift-1) = mov(*,*,it)
+      Xpol(ishift/2:ishift/2+N-1,ishift:N+ishift-1) = movx(*,*,it)
+      Ypol(ishift/2:ishift/2+N-1,ishift:N+ishift-1) = movy(*,*,it)
+      Ixy = Ixy+1d-10
+      psi = atan(Ypol/Ixy,Xpol/Ixy)/2.
+      tot_ang = atan(total(Ypol),total(Xpol))/2.*!radeg
+      deg = sqrt((Ypol/Ixy)^2.+(Xpol/Ixy)^2.)
+      tot_deg = sqrt(total(Xpol)^2+total(Ypol)^2)/total(Ixy)
+      Xpol = deg*cos(psi)
+      Ypol = deg*sin(psi)
+      data = byte(255*(alog10(Ixy/movmax+1e-4)+4.01)/4.)
+      N15 = (N-1)*1.5+1
+      N2 = (fix(600./N15))*N15
+      enlarge = rebin(data,N2,N2)
+   
+      erase
+      tvscl,enlarge,0,y_min,/Device
+      dd = 100.
+      pstep=10
+      maxIxy = max(Ixy)
+      for i=N15/6.,N15*(5./6.),pstep do begin
+         for j=N15/3.,N15,pstep do begin
+            x0 = i/(N15-1.)*12600.
+            y0 = j/(N15-1.)*12600.
+            dff = 100.*dd*([Xpol(i,j),Ypol(i,j),0])
+            if (Ixy(i,j) gt 1d-4*maxIxy) then $
+               plots,[x0-dff(0)/2.,x0+dff(0)/2.],[y0-dff(1)/2.,y0+dff(1)/2.],$
+                     color=255,/Device,thick=4
+         endfor
+      endfor
+      plots,[11000,11000+5.*dd],[12000,12000],color=255,thick=thk,/Device
+      xyouts,11000,11500,'deg=5%',color=255,/Device
+
+      Npx = 12600
+      Nx = 10
+      Ny = 5
+      xx = findgen(Nx)
+      yy = findgen(Ny)
+      xscale = findgen(Nx)/(Nx-1.)*5.-5.
+      xscale = 10.^xscale
+      yscale = fltarr(Nx)+1
+      movscl = fltarr(Ny,Nx)
+      for i=0,Nx-1 do movscl(*,i)=xscale(i)
+      data = byte(255*(alog10(movscl/max(movscl)+1e-5)+5.01)/5.)
+      enlarge = rebin(data,50,1000)
+;      tvscl,enlarge,0,1000,/Device
+      contour,enlarge,Position=[1600,6000,2000,12000],/Device,$
+              yticks=1,yminor=1,ytickname=[' ',' '],$
+              xticks=1,xminor=1,xtickname=[' ',' '],$
+              levels=indgen(255),c_color=indgen(255),/fill,/Noerase
+      plot_oi,yscale,xscale,Position=[1600,6000,2000,12000],xticks=1,$
+              xtickname=[' ',' '],yticks=5,yminor=1,$
+              ytickname=['10!U-5!N','10!U-4!N','10!U-3!N','10!U-2!N','10!U-1!N','1'],$
+              ytitle='I/I!Lmax!N',/Noerase,/Device,color=255
+      xyouts,11000,10500,inc_lbl(it),/Device,color=255
+   endfor
+endif
+
+;SORT IMAGES BY PHOTON HISTORY (ISORT)
+if (fix(ifig) eq 10) then begin
+   !P.Charsize=1
+   N = 201.
+   Nth = 41.
+   Nph = 40.
+   Ni = 11
+   run_id = 101
+   it = 2
+   Nspec = 101
+   run_sort = 0
+   
+   if (Nth eq 41) then $
+      inc_lbl = ['i=168!Uo!N',$
+                 'i=158!Uo!N','i=152!Uo!N','i=147!Uo!N','i=142!Uo!N','i=138!Uo!N',$
+                 'i=134!Uo!N','i=130!Uo!N','i=127!Uo!N','i=123!Uo!N','i=120!Uo!N',$
+                 'i=117!Uo!N','i=114!Uo!N','i=111!Uo!N','i=108!Uo!N','i=105!Uo!N',$
+                 'i=102!Uo!N','i=100!Uo!N','i=97!Uo!N','i=94!Uo!N','i=90!Uo!N',$
+                 'i=86!Uo!N','i=83!Uo!N','i=80!Uo!N','i=78!Uo!N',$
+                 'i=75!Uo!N','i=72!Uo!N','i=69!Uo!N','i=66!Uo!N','i=63!Uo!N',$
+                 'i=60!Uo!N','i=57!Uo!N','i=53!Uo!N','i=50!Uo!N','i=46!Uo!N',$
+                 'i=42!Uo!N','i=38!Uo!N','i=33!Uo!N','i=28!Uo!N','i=22!Uo!N',$
+                 'i=12!Uo!N']
+   run_id = 1251
+   Ixy = dblarr(N,N)
+   mov = fltarr(N,N,Nth)
+   movx = fltarr(N,N,Nth)
+   movy = fltarr(N,N,Nth)
+   imov = dblarr(Ni,N,N,Nth)
+   imovx = dblarr(Ni,N,N,Nth)
+   imovy = dblarr(Ni,N,N,Nth)
+      
+   rdatafile = 'data/scat_imag.0000.dat'
+   dumpstr = string(run_id,format='(I4.4)')
+   strput,rdatafile,dumpstr,15
+   openr,1,rdatafile
+   readf,1,mov,imov
+   close,1
+   rdatafile = 'data/scat_ipol.0000.dat'
+   dumpstr = string(run_id,format='(I4.4)')
+   strput,rdatafile,dumpstr,15
+   openr,1,rdatafile
+   readf,1,movx,movy,imovx,imovy
+   close,1
+      
+   for i=0,Nth-1 do begin
+      for j=0,Ni-1 do begin
+         imov(j,*,*,i)=transpose(imov(j,*,*,i))
+         imovx(j,*,*,i)=transpose(imovx(j,*,*,i))
+         imovy(j,*,*,i)=transpose(imovy(j,*,*,i))
+      endfor
+   endfor
+
+   if (ifig eq 10.1) then begin
+      ji = 2
+      mov = fltarr(N,N,Nth)
+      movx = fltarr(N,N,Nth)
+      movy = fltarr(N,N,Nth)
+      mov(*,*,*)=imov(ji,*,*,*)
+      movx(*,*,*)=imovx(ji,*,*,*)
+      movy(*,*,*)=imovy(ji,*,*,*)
+      sortmov = mov(sort(mov))
+      movmax = max(mov)
+      movmax=sortmov(1.*N*N*Nth-100.)
+;      movmax=sortmov(1.*N*N*Nth-1.)
+      Nend = Nth
+   endif
+   if (ifig eq 10.2) then begin
+      jth = 40
+      mov = fltarr(N,N,Ni)
+      movx = fltarr(N,N,Ni)
+      movy = fltarr(N,N,Ni)
+      for j=0,Ni-1 do begin
+         mov(*,*,j)=imov(j,*,*,jth)
+         movx(*,*,j)=imovx(j,*,*,jth)
+         movy(*,*,j)=imovy(j,*,*,jth)
+      endfor
+      sortmov = mov(sort(mov))
+      movmax = max(mov)
+      movmax=sortmov(1.*N*N*Ni-100.)
+;      movmax=sortmov(1.*N*N*Nth-1.)
+      Nend = Ni
+   endif
+   outliers = where(mov gt movmax)
+   if (outliers(0) ge 0) then begin
+      movx(outliers)=movx(outliers)/mov(outliers)*movmax
+      movy(outliers)=movy(outliers)/mov(outliers)*movmax
+      mov(outliers)=movmax
+   endif
+   
+   for it=Nend-1,0,-1 do begin
+      y_min = 0
+      if (N eq 81) then Ixy = dblarr(121,121)
+      if (N eq 201) then Ixy = dblarr(301,301)
+      ishift = N/2
+      Xpol = Ixy
+      Ypol = Ixy
+      Ixy(ishift/2:ishift/2+N-1,ishift:N+ishift-1) = mov(*,*,it)
+      Xpol(ishift/2:ishift/2+N-1,ishift:N+ishift-1) = movx(*,*,it)
+      Ypol(ishift/2:ishift/2+N-1,ishift:N+ishift-1) = movy(*,*,it)
+      Ixy = Ixy+1d-10
+      psi = atan(Ypol/Ixy,Xpol/Ixy)/2.
+      tot_ang = atan(total(Ypol),total(Xpol))/2.*!radeg
+      deg = sqrt((Ypol/Ixy)^2.+(Xpol/Ixy)^2.)
+      tot_deg = sqrt(total(Xpol)^2+total(Ypol)^2)/total(Ixy)
+      Xpol = deg*cos(psi)
+      Ypol = deg*sin(psi)
+      data = byte(255*(alog10(Ixy/movmax+1e-4)+4.01)/4.)
+      N15 = (N-1)*1.5+1
+      N2 = (fix(600./N15))*N15
+      enlarge = rebin(data,N2,N2)
+   
+      erase
+      tvscl,enlarge,0,y_min,/Device
+      dd = 100.
+      pstep=10
+      maxIxy = max(Ixy)
+      for i=N15/6.,N15*(5./6.),pstep do begin
+         for j=N15/3.,N15,pstep do begin
+            x0 = i/(N15-1.)*12600.
+            y0 = j/(N15-1.)*12600.
+            dff = 100.*dd*([Xpol(i,j),Ypol(i,j),0])
+            if (Ixy(i,j) gt 1d-4*maxIxy) then $
+               plots,[x0-dff(0)/2.,x0+dff(0)/2.],[y0-dff(1)/2.,y0+dff(1)/2.],$
+                     color=255,/Device,thick=4
+         endfor
+      endfor
+      plots,[11000,11000+5.*dd],[12000,12000],color=255,thick=thk,/Device
+      xyouts,11000,11500,'deg=5%',color=255,/Device
+
+      Npx = 12600
+      Nx = 10
+      Ny = 5
+      xx = findgen(Nx)
+      yy = findgen(Ny)
+      xscale = findgen(Nx)/(Nx-1.)*5.-5.
+      xscale = 10.^xscale
+      yscale = fltarr(Nx)+1
+      movscl = fltarr(Ny,Nx)
+      for i=0,Nx-1 do movscl(*,i)=xscale(i)
+      data = byte(255*(alog10(movscl/max(movscl)+1e-5)+5.01)/5.)
+      enlarge = rebin(data,50,1000)
+;      tvscl,enlarge,0,1000,/Device
+      contour,enlarge,Position=[1600,6000,2000,12000],/Device,$
+              yticks=1,yminor=1,ytickname=[' ',' '],$
+              xticks=1,xminor=1,xtickname=[' ',' '],$
+              levels=indgen(255),c_color=indgen(255),/fill,/Noerase
+      plot_oi,yscale,xscale,Position=[1600,6000,2000,12000],xticks=1,$
+              xtickname=[' ',' '],yticks=5,yminor=1,$
+              ytickname=['10!U-5!N','10!U-4!N','10!U-3!N','10!U-2!N','10!U-1!N','1'],$
+              ytitle='I/I!Lmax!N',/Noerase,/Device,color=255
+      xyouts,11000,10500,inc_lbl(it),/Device,color=255
+   endfor
+   stop
+endif
 
   if (fix(ifig) eq 7) then begin
       !P.charsize=1.3
-      Nt = 21
+      Nt = 41
       Nspec = 101
 ;sandwich corona, vary tau and T
       run_ids = [102,101,100,103]
-      
+      run_ids = [1250,1250,1250,1250]
       idex75 = 4
       idex60 = 10
       idex45 = 15
@@ -580,7 +1033,7 @@ endif
       shorte = emin*10.^(findgen(Nspec)/(Nspec-1.)*alog10(emax/emin))
       de = deriv(shorte)
 
-      for rundex=0,3 do begin
+      for rundex=0,0 do begin
           run_id = run_ids(rundex)
           rdatafile = 'data/scat_spec.0000.dat'
           dumpstr = string(run_id,format='(I4.4)')

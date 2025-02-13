@@ -24,18 +24,19 @@
 #define OPT_THIN 0.0
 #define TWO_SIDED 1.0
 #define em_model 2.0
-#define RUN_ID 1250.0
+#define RUN_ID 1251.0
 
-#define N 5
+#define N 100
 #define Ne 100
 #define Nr 179
 #define Nth 159
-#define Nph 63
-#define Ni 80
+#define Nph 255
+#define Ni 200
 #define Nt 20
 #define Nph_obs 39
 #define Nth_obs 40
 #define Ne_obs 10
+#define N_symm 8
 
 #define PI 3.14159265358979323846
 #define kB 1.38e-16
@@ -72,7 +73,7 @@ double F_cycl(double x, double T_e);
 double lookup_Pnorm(double Pnorm[], double T_[], double T_e, int N_T);
 void calc_Pnorm_T(double Pnorm[], double T[], int N_T);
 void m_mult3(double A[3][3], double B[3][3], double C[3][3]);
-
+double ran2(long *idum);
   
 
 /****************VECTOR_MATH.C***********************************/

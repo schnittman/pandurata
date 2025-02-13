@@ -8,6 +8,7 @@ PRO read_harm3d_data2,run_id_in,run_id_out,aa,L_Ledd,corona_tau
   N1 = 0
   N2 = 0
   N3 = 0
+  Nsym = 4 ;Nsym-fold symmetry, copy sim data into 2PI domain
   M_sun = 14.8 ;BH mass in solar mass units
   t_frame = 0. 
   attach_NT = 0.;used for adding a Novikov-Thorne disk at large radius
@@ -366,7 +367,7 @@ PRO read_harm3d_data2,run_id_in,run_id_out,aa,L_Ledd,corona_tau
   sigma_T = 6.6525d-25
   mp = 1.6726d-24
   me = 9.1094d-28
-  za = 7.5657d-15
+  za = 7.5657d-15 ;=4\sigma/c
   kB = 1.3807d-16
   kB_ev = 8.6173d-5
   qe = 4.8032d-10
@@ -481,8 +482,9 @@ PRO read_harm3d_data2,run_id_in,run_id_out,aa,L_Ledd,corona_tau
   endfor
 
 ;calculate location of emission surfaces (photosphere with optical
-;depth =1) This is what pandurata uses as photosphere
-
+;depth = corona_tau) This is what pandurata uses as photosphere
+;Use linear interpolation to get the exact value of \theta for the
+;photosphere and the flux between the corona_tau surfaces.
 
   for ir=0,N1-1 do begin
       for ip=0,N3-1 do begin
@@ -541,12 +543,13 @@ PRO read_harm3d_data2,run_id_in,run_id_out,aa,L_Ledd,corona_tau
           flux_cgs(ir,*,ip)=subflx
           T_cor(ir,*,ip)=0
 
-;following Schnittman, Krolik, & Noble (2012), estimate coronal
+;following Schnittman, Krolik, & Noble (2013), estimate coronal
 ;temperature by balancing IC cooling with harm3d emissivity
           for ith=0,N2-1 do begin
               if (Utot_ijk(ir,ith,ip) gt 0) then begin
                   gam2 = 3./4.*ll_cgs(ir,ith,ip)/ $
                     (cc*sigma_T*n_e(ir,ith,ip)*Utot_ijk(ir,ith,ip))+1.
+                  ;for low temp
                   T_cor(ir,ith,ip)=(sqrt(gam2)-1.)*(2./3.*me*cc^2/kB)
               endif
           endfor
@@ -678,11 +681,74 @@ PRO read_harm3d_data2,run_id_in,run_id_out,aa,L_Ledd,corona_tau
   dldrtot = total(total(harm_tot,3),2)
   dldrrt = total(total(rt_cor,3),2)
   dldrrttot = total(total(rt_tot,3),2)
-stop
+;stop
   print,total(ll_cgs(insim)*dV_cgs(insim))*4./(Mdot_cgs*cc*cc)
   contour,Tdisk,r#cos(p),r#sin(p),xrange=[0,40],yrange=[0,40],$
     levels = 5d6*findgen(100)/99.,/isotropic,/fill
-stop
+;  stop
+
+  pdex = indgen(N3)
+  if (Nsym gt 1) then begin
+     diskbody2 = fltarr(N1,Nsym*N3)
+     sigtau_es2 = fltarr(N1,Nsym*N3)
+     Tdisk2 = fltarr(N1,Nsym*N3)
+     em_top2 = fltarr(N1,Nsym*N3)
+     em_bot2 = fltarr(N1,Nsym*N3)
+     ref_top2 = fltarr(N1,Nsym*N3)
+     ref_bot2 = fltarr(N1,Nsym*N3)
+     p2 = fltarr(Nsym*N3)
+     rho_cgs2 = fltarr(N1,N2,Nsym*N3)
+     T_cor2 = fltarr(N1,N2,Nsym*N3)
+     u0_2 = fltarr(N1,N2,Nsym*N3)
+     u1_2 = fltarr(N1,N2,Nsym*N3)
+     u2_2 = fltarr(N1,N2,Nsym*N3)
+     u3_2 = fltarr(N1,N2,Nsym*N3)
+     diskbody_ijk2 = intarr(N1,N2,Nsym*N3)
+     tau_es2 = fltarr(N1,N2+1,Nsym*N3)
+     b2_cgs2 = fltarr(N1,N2,Nsym*N3)
+     ll_cgs2 = fltarr(N1,N2,Nsym*N3)
+     for jquad =0,Nsym-1 do begin
+        pdex2 = N3*jquad+pdex
+        diskbody2(*,pdex2)=diskbody(*,pdex)
+        sigtau_es2(*,pdex2)=sigtau_es(*,pdex)
+        Tdisk2(*,pdex2)=Tdisk(*,pdex)
+        em_top2(*,pdex2)=em_top(*,pdex)
+        em_bot2(*,pdex2)=em_bot(*,pdex)
+        ref_top2(*,pdex2)=ref_top(*,pdex)
+        ref_bot2(*,pdex2)=ref_bot(*,pdex)
+        p2(pdex2)=p(pdex)+jquad*2.*!PI/Nsym
+        rho_cgs2(*,*,pdex2)=rho_cgs(*,*,pdex)
+        T_cor2(*,*,pdex2)=T_cor(*,*,pdex)
+        u0_2(*,*,pdex2)=u0(*,*,pdex)
+        u1_2(*,*,pdex2)=u1(*,*,pdex)
+        u2_2(*,*,pdex2)=u2(*,*,pdex)
+        u3_2(*,*,pdex2)=u3(*,*,pdex)
+        diskbody_ijk2(*,*,pdex2)=diskbody_ijk(*,*,pdex)
+        tau_es2(*,*,pdex2)=tau_es(*,*,pdex)
+        b2_cgs2(*,*,pdex2)=b2_cgs(*,*,pdex)
+        ll_cgs2(*,*,pdex2)=ll_cgs(*,*,pdex)
+     endfor
+     diskbody = diskbody2
+     sigtau_es = sigtau_es2
+     Tdisk = Tdisk2
+     em_top = em_top2
+     em_bot = em_bot2
+     ref_top = ref_top2
+     ref_bot = ref_bot2
+     p = p2
+     rho_cgs = rho_cgs2
+     b2_cgs = b2_cgs2
+     ll_cgs = ll_cgs2
+     tau_es = tau_es2
+     T_cor = T_cor2
+     u0 = u0_2
+     u1 = u1_2
+     u2 = u2_2
+     u3 = u3_2
+     diskbody_ijk = diskbody_ijk2
+  endif
+     
+     
   run_id = run_id_out
   wdatafile = 'data/ph_0000.dat'
   dumpstr = string(run_id,format='(I4.4)')
@@ -691,13 +757,13 @@ stop
   printf,1,float(diskbody),float(sigtau_es),float(Tdisk),float(em_top),$
     float(em_bot),float(ref_top),float(ref_bot)
   close,1
-
+stop
   wdatafile = 'data/gr_0000.dat'
   dumpstr = string(run_id,format='(I4.4)')
   strput,wdatafile,dumpstr,8
   print,wdatafile
   openw,1,wdatafile
-  printf,1,N1,N2,N3
+  printf,1,N1,N2,N3*Nsym
   printf,1,r,t,p
   close,1
   wdatafile = 'data/rh_0000.dat'
@@ -761,7 +827,7 @@ stop
   printf,1,float(ll_cgs)
   close,1
   ;oplot,rr(*,0,0),Tdisk(*,0)  
-;stop  
+stop  
 END
 
 PRO plot_surfaces,N1,N3,sigtau_es,vertices_top,vertices_bot
