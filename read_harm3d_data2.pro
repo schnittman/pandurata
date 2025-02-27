@@ -330,7 +330,7 @@ PRO read_harm3d_data2,run_id_in,run_id_out,aa,L_Ledd,corona_tau
     g_(*,*,2,2)*u2(*,*,ph0)*u2(*,*,ph0)+ $
     g_(*,*,3,3)*u3(*,*,ph0)*u3(*,*,ph0)
   E_0 = -(g_(*,*,0,0)*u0(*,*,0)+g_(*,*,0,3)*u3(*,*,0))
-;stop
+stop
 
 ;Mdotc is the accretion rate in harm3d units. M_BH is black hole mass
 ;(in gm)

@@ -26,7 +26,7 @@
 #define em_model 2.0
 #define RUN_ID 1251.0
 
-#define N 100
+#define N 10
 #define Ne 100
 #define Nr 179
 #define Nth 159
@@ -36,7 +36,8 @@
 #define Nph_obs 39
 #define Nth_obs 40
 #define Ne_obs 10
-#define N_symm 8
+#define Ns_obs 5
+#define N_symm 1
 
 #define PI 3.14159265358979323846
 #define kB 1.38e-16

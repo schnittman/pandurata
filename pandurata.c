@@ -124,8 +124,8 @@ int main(int argc, char* argv[])
     *movie,*y_pass,*l_pass,*I_r,*I_rph,*I_pass,*R_pass,*Ispecp,
     *L_factr,*G_factr,*B_factr,*T_factr,
     *adata,*bdata,**adata1,*bdata1,*xdata1,*image,*imagex,*imagey,
-    *spcimage,*spcimagex,*spcimagey,*phimage,*phimagex,*phimagey,
-    *x_clumps,*r_clumps;
+    *spcimage,*spcimagex,*spcimagey,*srtimage,*srtimagex,*srtimagey,
+    *phimage,*phimagex,*phimagey,*x_clumps,*r_clumps;
   double y0[8]={0,10,0,0,1,0,0,0},nu_cut=500.,dnu_cut=100.;
   long it,ip,ith,iph,jth,jph,je,jt,i,j,k,iv,ix,iy,ir,jr,Fe_phot,elo,ehi,
     view_jph,jquad,jphq,iv_Fe,
@@ -139,7 +139,7 @@ int main(int argc, char* argv[])
   double big,temp;
   FILE *outfile,*outfile2;
   char fname1[100],fname2[100],fname3[100],fname4[100],fname5[100],fname6[100],
-    fname7[100],fname8[100],fname9[100];
+    fname7[100],fname8[100],fname9[100],fname10[100],fname11[100];
 
   int myid,numprocs,tag,source;
   /*
@@ -227,6 +227,12 @@ int main(int argc, char* argv[])
       (double *)malloc((Nth_obs+1)*(Ni+1)*(Ni+1)*(Ne_obs+1)*sizeof(double));
     spcimagey = 
       (double *)malloc((Nth_obs+1)*(Ni+1)*(Ni+1)*(Ne_obs+1)*sizeof(double));
+    srtimage = 
+      (double *)malloc((Nth_obs+1)*(Ni+1)*(Ni+1)*(Ns_obs+1)*sizeof(double));
+    srtimagex = 
+      (double *)malloc((Nth_obs+1)*(Ni+1)*(Ni+1)*(Ns_obs+1)*sizeof(double));
+    srtimagey = 
+      (double *)malloc((Nth_obs+1)*(Ni+1)*(Ni+1)*(Ns_obs+1)*sizeof(double));
     phimage = 
       (double *)malloc((Nth_obs+1)*(Nph_obs+1)*(Ni+1)*(Ni+1)*sizeof(double));
     phimagex = 
@@ -244,6 +250,11 @@ int main(int argc, char* argv[])
 	    spcimagex[indexspci(it,ix,iy,je)]=0;
 	    spcimagey[indexspci(it,ix,iy,je)]=0;
 	  }
+	  for (je=0;je<=Ns_obs;je++) {
+	    srtimage[indexspci(it,ix,iy,je)]=0;
+	    srtimagex[indexspci(it,ix,iy,je)]=0;
+	    srtimagey[indexspci(it,ix,iy,je)]=0;
+	  }	  
 	  for (jph=0;jph<=Nph_obs;jph++) {
 	    phimage[indexphi(it,jph,ix,iy)]=0;
 	    phimagex[indexphi(it,jph,ix,iy)]=0;
@@ -458,7 +469,6 @@ int main(int argc, char* argv[])
   irstep = 1;
   iphstart = 0;
   iphstop = (Nph+1)/N_symm-1;
-  iphstop = 2;
   iphstep = 1;
 
   flux2 = 0;
@@ -2282,7 +2292,7 @@ int main(int argc, char* argv[])
 		  //((imageprint == 1)&&(dscat == 0)&&(iscat >= 0)) {
 		  //NORMAL CASE:
 		  if ((imageprint == 1)&&(isort >= 0)) {
-		    je = isort;
+		    //je = isort;
 		    if ((ix >= 0)&&(ix <= Ni)&&(iy >= 0)&&(iy <= Ni)
 			&&(fmod((int)jph,(Nph_obs+1)/N_symm) == fmod(view_jph,(Nph_obs+1)/N_symm))) {
 		      //if (iv == 100) printf("%g %g %g %d %d %d\n",A_fact,Bnu_[iv],dnui0[elo],jph,ix,iy);
@@ -2330,14 +2340,11 @@ int main(int argc, char* argv[])
 	      //ONLY SCATTERED PHOTONS:
 	      //if ((imageprint == 1)&&(dscat == 0)&&(iscat > 0)) {
 	      //NORMAL CASE:
-	      //printf("%g %d %d %d\n",cos(y2[2]),jph,ix,iy);
-	      if ((imageprint == 1)&&(isort <= 1)) {
-		if ((ix >= 0)&&(ix <= Ni)&&(iy >= 0)&&(iy <= Ni)&&(iscat >=0)
+	      if (imageprint == 1) {
+		if ((ix >= 0)&&(ix <= Ni)&&(iy >= 0)&&(iy <= Ni)&&(isort <=1)
 		    &&(fmod((int)jph,(Nph_obs+1)/N_symm) == fmod(view_jph,(Nph_obs+1)/N_symm))) {
 		  //image contains energy-integrated flux, so we should
 		  //not include a factor of 1/dnu
-		  //printf("%g %d %d %d %d\n",cos(y2[2]),jth,jph,ix,iy);
-		  //if (cos(yn[2]) >= 0) {
 		  if ((cos(yn[2]) >= 0)||(TWO_SIDED >= 1)) {
 		    image[indexi(jth,Ni-ix,Ni-iy)] += Iobs[indexph(jth,jph,jt)];
 		    imagex[indexi(jth,Ni-ix,Ni-iy)] +=
@@ -2354,13 +2361,28 @@ int main(int argc, char* argv[])
 		      Iobs[indexph(jth,jph,jt)]*deg*(-sin(2.*psi));
 		  }
 		}
-		if ((jth==10)&&(jph==0)) {
-		  //printf("%10.4e %10.4e %10.4e %10.4e %10.4e\n",
-		  // Bnu_[0],Bnu_[50],Bnu_[100],Bnu_[150],Bnu_[200]);
-		  //printf("%g %g\n",A_fact,Iobs[indexph(jth,jph,jt)]);
+		if ((ix >= 0)&&(ix <= Ni)&&(iy >= 0)&&(iy <= Ni)&&(isort >=0)
+		    &&(fmod((int)jph,(Nph_obs+1)/N_symm) == fmod(view_jph,(Nph_obs+1)/N_symm))) {
+		  //IMAGES SORTED BY PHOTON PACKET HISTORY
+		  if ((cos(yn[2]) >= 0)||(TWO_SIDED >= 1)) {
+		    srtimage[indexspci(jth,Ni-ix,Ni-iy,isort)] +=
+		      Iobs[indexph(jth,jph,jt)];
+		    srtimagex[indexspci(jth,Ni-ix,Ni-iy,isort)] +=
+		      Iobs[indexph(jth,jph,jt)]*deg*cos(2.*psi);
+		    srtimagey[indexspci(jth,Ni-ix,Ni-iy,isort)] +=
+		      Iobs[indexph(jth,jph,jt)]*deg*sin(2.*psi);
+		  }
+		  if ((cos(yn[2]) < 0)&&(TWO_SIDED == 0)) {
+		    srtimage[indexspci(jth,Ni-ix,iy,isort)] +=
+		      Iobs[indexph(jth,jph,jt)];
+		    srtimagex[indexspci(jth,Ni-ix,iy,isort)] += 
+		      Iobs[indexph(jth,jph,jt)]*deg*cos(2.*psi);
+		    srtimagey[indexspci(jth,Ni-ix,iy,isort)] += 
+		      Iobs[indexph(jth,jph,jt)]*deg*(-sin(2.*psi));
+		  }		  
 		}
 		if ((ix >= 0)&&(ix <= Ni)&&(iy >= 0)&&(iy <= Ni)
-		    &&((cos(y2[2])>0)||(TWO_SIDED >= 1))&&(iscat >=0)) {
+		    &&((cos(y2[2])>0)||(TWO_SIDED >= 1))&&(isort <=1)) {
 		  for (jquad=0;jquad<N_symm;jquad++) {
 		    jphq = fmod((int)(jph+(Nph_obs+1)/N_symm*jquad),Nph_obs+1);
 		    phimage[indexphi(jth,jphq,Ni-ix,Ni-iy)] += 
@@ -2457,6 +2479,16 @@ int main(int argc, char* argv[])
     fname9[16]=48+file_ih;
     fname9[17]=48+file_id;
     fname9[18]=48+file_iu;
+    strcpy(fname10,"data/scat_ispc.0000.dat");
+    fname10[15]=48+file_ik;
+    fname10[16]=48+file_ih;
+    fname10[17]=48+file_id;
+    fname10[18]=48+file_iu;
+    strcpy(fname11,"data/scat_isrt.0000.dat");
+    fname11[15]=48+file_ik;
+    fname11[16]=48+file_ih;
+    fname11[17]=48+file_id;
+    fname11[18]=48+file_iu;
 
     outfile = fopen(fname1, "w");
     outfile2 = fopen(fname2, "w");
@@ -2620,26 +2652,8 @@ int main(int argc, char* argv[])
 	  }
 	}
       }
-      fprintf(outfile,"\n");
     }
-
-    for (it=0;it<=Nth_obs;it++) {
-      for (ix=0;ix<=Ni;ix++) {
-	for (iy=0;iy<=Ni;iy++) {
-	  for (je=0;je<=Ne_obs;je++) {
-	    if (((je%6) == 5)||(je == Ne_obs)) {
-	      fprintf(outfile,"%12.5e\n",spcimage[indexspci(it,ix,iy,je)]);
-	    } else {
-	      fprintf(outfile,"%12.5e ",spcimage[indexspci(it,ix,iy,je)]);
-	    }
-	  }
-	}
-      }
-      fprintf(outfile,"\n");
-    }
-    fclose(outfile);
-
-    outfile = fopen(fname5, "w");
+    fprintf(outfile,"\n");
     for (it=0;it<=Nth_obs;it++) {
       for (ix=0;ix<=Ni;ix++) {
 	for (iy=0;iy<=Ni;iy++) {
@@ -2650,8 +2664,8 @@ int main(int argc, char* argv[])
 	  }
 	}
       }
-      fprintf(outfile,"\n");
     }
+    fprintf(outfile,"\n");
     for (it=0;it<=Nth_obs;it++) {
       for (ix=0;ix<=Ni;ix++) {
 	for (iy=0;iy<=Ni;iy++) {
@@ -2662,14 +2676,73 @@ int main(int argc, char* argv[])
 	  }
 	}
       }
-      fprintf(outfile,"\n");
     }
+    fclose(outfile);
 
+    outfile = fopen(fname7, "w");
+    for (it=0;it<=Nth_obs;it++) {
+      for (ip=0;ip<=Nph_obs;ip++) {
+	for (ix=0;ix<=Ni;ix++) {
+	  for (iy=0;iy<=Ni;iy++) {
+	    if (iy == Ni) {
+	      fprintf(outfile,"%12.5e\n",phimage[indexphi(it,ip,ix,iy)]);
+	    } else {
+	      fprintf(outfile,"%12.5e ",phimage[indexphi(it,ip,ix,iy)]);
+	    }
+	  }
+	}
+      }
+    }
+    fprintf(outfile,"\n");
+    for (it=0;it<=Nth_obs;it++) {
+      for (ip=0;ip<=Nph_obs;ip++) {
+	for (ix=0;ix<=Ni;ix++) {
+	  for (iy=0;iy<=Ni;iy++) {
+	    if (iy == Ni) {
+	      fprintf(outfile,"%12.5e\n",phimagex[indexphi(it,ip,ix,iy)]);
+	    } else {
+	      fprintf(outfile,"%12.5e ",phimagex[indexphi(it,ip,ix,iy)]);
+	    }
+	  }
+	}
+      }
+    }
+    fprintf(outfile,"\n");
+    for (it=0;it<=Nth_obs;it++) {
+      for (ip=0;ip<=Nph_obs;ip++) {
+	for (ix=0;ix<=Ni;ix++) {
+	  for (iy=0;iy<=Ni;iy++) {
+	    if (iy == Ni) {
+	      fprintf(outfile,"%12.5e\n",phimagey[indexphi(it,ip,ix,iy)]);
+	    } else {
+	      fprintf(outfile,"%12.5e ",phimagey[indexphi(it,ip,ix,iy)]);
+	    }
+	  }
+	}
+      }
+    }
+    fclose(outfile);
+
+    outfile = fopen(fname10, "w");
     for (it=0;it<=Nth_obs;it++) {
       for (ix=0;ix<=Ni;ix++) {
 	for (iy=0;iy<=Ni;iy++) {
 	  for (je=0;je<=Ne_obs;je++) {
-	    if (((je%6) == 5)||(je == Ne_obs)) {
+	    if (je == Ne_obs) {
+	      fprintf(outfile,"%12.5e\n",spcimage[indexspci(it,ix,iy,je)]);
+	    } else {
+	      fprintf(outfile,"%12.5e ",spcimage[indexspci(it,ix,iy,je)]);
+	    }
+	  }
+	}
+      }
+    }
+    fprintf(outfile,"\n");
+    for (it=0;it<=Nth_obs;it++) {
+      for (ix=0;ix<=Ni;ix++) {
+	for (iy=0;iy<=Ni;iy++) {
+	  for (je=0;je<=Ne_obs;je++) {
+	    if (je == Ne_obs) {
 	      fprintf(outfile,"%12.5e\n",spcimagex[indexspci(it,ix,iy,je)]);
 	    } else {
 	      fprintf(outfile,"%12.5e ",spcimagex[indexspci(it,ix,iy,je)]);
@@ -2677,13 +2750,13 @@ int main(int argc, char* argv[])
 	  }
 	}
       }
-      fprintf(outfile,"\n");
     }
+    fprintf(outfile,"\n");
     for (it=0;it<=Nth_obs;it++) {
       for (ix=0;ix<=Ni;ix++) {
 	for (iy=0;iy<=Ni;iy++) {
 	  for (je=0;je<=Ne_obs;je++) {
-	    if (((je%6) == 5)||(je == Ne_obs)) {
+	    if (je == Ne_obs) {
 	      fprintf(outfile,"%12.5e\n",spcimagey[indexspci(it,ix,iy,je)]);
 	    } else {
 	      fprintf(outfile,"%12.5e ",spcimagey[indexspci(it,ix,iy,je)]);
@@ -2691,7 +2764,50 @@ int main(int argc, char* argv[])
 	  }
 	}
       }
-      fprintf(outfile,"\n");
+    }
+    fclose(outfile);
+    
+    outfile = fopen(fname11, "w");
+    for (it=0;it<=Nth_obs;it++) {
+      for (ix=0;ix<=Ni;ix++) {
+	for (iy=0;iy<=Ni;iy++) {
+	  for (je=0;je<=Ns_obs;je++) {
+	    if (je == Ns_obs) {
+	      fprintf(outfile,"%12.5e\n",srtimage[indexspci(it,ix,iy,je)]);
+	    } else {
+	      fprintf(outfile,"%12.5e ",srtimage[indexspci(it,ix,iy,je)]);
+	    }
+	  }
+	}
+      }
+    }
+    fprintf(outfile,"\n");
+    for (it=0;it<=Nth_obs;it++) {
+      for (ix=0;ix<=Ni;ix++) {
+	for (iy=0;iy<=Ni;iy++) {
+	  for (je=0;je<=Ns_obs;je++) {
+	    if (je == Ns_obs) {
+	      fprintf(outfile,"%12.5e\n",srtimagex[indexspci(it,ix,iy,je)]);
+	    } else {
+	      fprintf(outfile,"%12.5e ",srtimagex[indexspci(it,ix,iy,je)]);
+	    }
+	  }
+	}
+      }
+    }
+    fprintf(outfile,"\n");
+    for (it=0;it<=Nth_obs;it++) {
+      for (ix=0;ix<=Ni;ix++) {
+	for (iy=0;iy<=Ni;iy++) {
+	  for (je=0;je<=Ns_obs;je++) {
+	    if (je == Ns_obs) {
+	      fprintf(outfile,"%12.5e\n",srtimagey[indexspci(it,ix,iy,je)]);
+	    } else {
+	      fprintf(outfile,"%12.5e ",srtimagey[indexspci(it,ix,iy,je)]);
+	    }
+	  }
+	}
+      }
     }
     fclose(outfile);
 
@@ -2720,69 +2836,6 @@ int main(int argc, char* argv[])
 	    fprintf(outfile,"%12.5e ",Ispecp[indexph(jth,jph,je)]);
 	  }
 	}
-      }
-      fprintf(outfile,"\n");
-    }
-    fclose(outfile);
-
-    /*
-    for (it=0;it<=Nth_obs;it++) {
-      for (ix=0;ix<=Ni;ix++) {
-	for (iy=0;iy<=Ni;iy++) {
-	  if (((iy%6) == 5)||(iy == Ni)) {
-	    fprintf(outfile,"%12.5e\n",imagey[indexi(it,ix,iy)]);
-	  } else {
-	    fprintf(outfile,"%12.5e ",imagey[indexi(it,ix,iy)]);
-	  }
-	}
-      }
-      fprintf(outfile,"\n");
-    }
-    */
-
-    outfile = fopen(fname7, "w");
-    for (it=0;it<=Nth_obs;it++) {
-      for (ip=0;ip<=Nph_obs;ip++) {
-	for (ix=0;ix<=Ni;ix++) {
-	  for (iy=0;iy<=Ni;iy++) {
-	    if (((iy%6) == 5)||(iy == Ni)) {
-	      fprintf(outfile,"%12.5e\n",phimage[indexphi(it,ip,ix,iy)]);
-	    } else {
-	      fprintf(outfile,"%12.5e ",phimage[indexphi(it,ip,ix,iy)]);
-	    }
-	  }
-	}
-	fprintf(outfile,"\n");
-      }
-      fprintf(outfile,"\n");
-    }
-    for (it=0;it<=Nth_obs;it++) {
-      for (ip=0;ip<=Nph_obs;ip++) {
-	for (ix=0;ix<=Ni;ix++) {
-	  for (iy=0;iy<=Ni;iy++) {
-	    if (((iy%6) == 5)||(iy == Ni)) {
-	      fprintf(outfile,"%12.5e\n",phimagex[indexphi(it,ip,ix,iy)]);
-	    } else {
-	      fprintf(outfile,"%12.5e ",phimagex[indexphi(it,ip,ix,iy)]);
-	    }
-	  }
-	}
-	fprintf(outfile,"\n");
-      }
-      fprintf(outfile,"\n");
-    }
-    for (it=0;it<=Nth_obs;it++) {
-      for (ip=0;ip<=Nph_obs;ip++) {
-	for (ix=0;ix<=Ni;ix++) {
-	  for (iy=0;iy<=Ni;iy++) {
-	    if (((iy%6) == 5)||(iy == Ni)) {
-	      fprintf(outfile,"%12.5e\n",phimagey[indexphi(it,ip,ix,iy)]);
-	    } else {
-	      fprintf(outfile,"%12.5e ",phimagey[indexphi(it,ip,ix,iy)]);
-	    }
-	  }
-	}
-	fprintf(outfile,"\n");
       }
       fprintf(outfile,"\n");
     }
