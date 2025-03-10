@@ -18,7 +18,7 @@ void lookup_data(double part_x0[],
   t = acos(cos(t));
   f = part_x0[3];
   while (f < 0) f+=2.*PI;
-  f = fmod(f,0.5*PI);
+  f = fmod(f,2.0*PI/N_symm);
   dph = (pp[Nph]-pp[0])/Nph;
   dth = (tt[Nth]-tt[0])/Nth;
   if ((r < rr[Nr])&&(r > rr[0])&&(t > tt[0])&&(t < tt[Nth])) {

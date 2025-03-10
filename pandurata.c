@@ -1994,9 +1994,11 @@ int main(int argc, char* argv[])
 		  for (j=0;j<=1;j++) {
 		    for (k=0;k<=1;k++) {
 		      wght = weights[i+6]*weights[j+8]*weights[k+10];
-		      corpow_ijk[indexijk((int)weights[i],(int)weights[j+2],
-					  (int)weights[k+4])] 
-			+= wght*(pow_f-pow_i)*A_fact;
+		      for (jquad=0;jquad<N_symm;jquad++) {
+			jphq=fmod((int)(weights[k+4]+(Nph+1)/N_symm*jquad),Nph+1);
+			corpow_ijk[indexijk((int)weights[i],(int)weights[j+2],jphq)] 
+			  += wght*(pow_f-pow_i)*A_fact/N_symm;
+		      }
 		    }
 		  }
 		}
